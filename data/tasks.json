@@ -1,0 +1,82 @@
+[
+  {
+    "id": "d6c6b41d-a975-471a-a155-cbf37200fc21",
+    "name": "💪 上肢力量训练（胸+肩+三头）",
+    "done": false,
+    "date": "2026-05-25",
+    "duration_min": 60,
+    "recommended_time": "15:00 - 16:00"
+  },
+  {
+    "id": "1d139376-bfb8-4248-948e-1ba8b84e678a",
+    "name": "🔥 核心训练（卷腹/平板支撑/死虫式）",
+    "done": false,
+    "date": "2026-05-26",
+    "duration_min": 40,
+    "recommended_time": "16:00 - 16:40"
+  },
+  {
+    "id": "a31886f0-8864-49ff-b96e-6e00eefa7014",
+    "name": "🏃 有氧：跳绳/高抬腿",
+    "done": false,
+    "date": "2026-05-26",
+    "duration_min": 20,
+    "recommended_time": "19:00 - 19:20"
+  },
+  {
+    "id": "f0999f00-660c-464e-b331-905d77c9286d",
+    "name": "🚶 散步/轻度活动（可选）",
+    "done": false,
+    "date": "2026-05-27",
+    "duration_min": 30,
+    "recommended_time": "19:00 - 19:30"
+  },
+  {
+    "id": "716911d7-5b16-473b-bcf7-3cefd6f393ee",
+    "name": "🦵 下肢力量训练（腿+臀）",
+    "done": false,
+    "date": "2026-05-28",
+    "duration_min": 50,
+    "recommended_time": "16:00 - 16:50"
+  },
+  {
+    "id": "6d70aa3c-0700-477d-a2ec-03ef63e5f5eb",
+    "name": "🔙 背部力量训练（背+二头）",
+    "done": false,
+    "date": "2026-05-29",
+    "duration_min": 60,
+    "recommended_time": "15:00 - 16:00"
+  },
+  {
+    "id": "a6806177-fc4e-4d05-98a8-8ab5dd24f224",
+    "name": "🔥 核心训练（同周二）",
+    "done": false,
+    "date": "2026-05-30",
+    "duration_min": 40,
+    "recommended_time": "10:00 - 10:40"
+  },
+  {
+    "id": "1f964587-d274-46bd-ab34-263f03b177c1",
+    "name": "🏃 有氧：跳绳/高抬腿",
+    "done": false,
+    "date": "2026-05-30",
+    "duration_min": 20,
+    "recommended_time": "17:00 - 17:20"
+  },
+  {
+    "id": "ba279961-224e-44cc-a6b8-dd0d7fd58f1f",
+    "name": "🦵 下肢训练（腿+臀）",
+    "done": false,
+    "date": "2026-05-31",
+    "duration_min": 50,
+    "recommended_time": "10:00 - 10:50"
+  },
+  {
+    "id": "814d949c-265a-4624-b0a2-9323dbbc2a3c",
+    "name": "🧘 拉伸放松",
+    "done": false,
+    "date": "2026-05-31",
+    "duration_min": 20,
+    "recommended_time": "10:50 - 11:10"
+  }
+]

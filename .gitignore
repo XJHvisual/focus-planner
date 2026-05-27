@@ -1,0 +1,5 @@
+﻿__pycache__/
+*.pyc
+data/tracker_v2.db
+data/.pid.lock
+data/settings.json
