@@ -1,3 +1,4 @@
 Set WshShell = CreateObject("WScript.Shell")
-WshShell.CurrentDirectory = "D:\QClawWorkspace\all_in_one"
+Set fso = CreateObject("Scripting.FileSystemObject")
+WshShell.CurrentDirectory = fso.GetParentFolderName(WScript.ScriptFullName)
 WshShell.Run "pythonw main.py", 0, False
