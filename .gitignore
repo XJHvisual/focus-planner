@@ -1,13 +1,14 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
+*.bak
+*.bak*
+main_backup.py
 data/tracker_v2.db
 data/.pid.lock
 data/settings.json
 data/focus_planner.db
 data/tracker_v2.db.bak*
 .codegraph/
-
 build/
 dist/
 *.spec
-

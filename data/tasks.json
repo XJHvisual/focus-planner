@@ -78,5 +78,85 @@
     "date": "2026-05-31",
     "duration_min": 20,
     "recommended_time": "10:50 - 11:10"
+  },
+  {
+    "id": "24e2201d-ddc0-4925-a2ef-9dca6d52c163",
+    "name": "💪 上肢力量训练（胸+肩+三头）",
+    "done": false,
+    "date": "2026-06-01",
+    "duration_min": 60,
+    "recommended_time": "15:00 - 16:00"
+  },
+  {
+    "id": "20083166-354c-4462-ad26-8ea244db0ef9",
+    "name": "🔥 核心训练（卷腹/平板支撑/死虫式）",
+    "done": false,
+    "date": "2026-06-02",
+    "duration_min": 40,
+    "recommended_time": "16:00 - 16:40"
+  },
+  {
+    "id": "99dba6e7-2818-4dc8-b175-6c6e0a9e0091",
+    "name": "🏃 有氧：跳绳/高抬腿",
+    "done": false,
+    "date": "2026-06-02",
+    "duration_min": 20,
+    "recommended_time": "19:00 - 19:20"
+  },
+  {
+    "id": "af07ce13-1c6a-4a01-9c24-9c455b29bc5c",
+    "name": "🚶 散步/轻度活动（可选）",
+    "done": false,
+    "date": "2026-06-03",
+    "duration_min": 30,
+    "recommended_time": "19:00 - 19:30"
+  },
+  {
+    "id": "16e500e3-e5e5-4e79-a045-660d35b35121",
+    "name": "🦵 下肢力量训练（腿+臀）",
+    "done": false,
+    "date": "2026-06-04",
+    "duration_min": 50,
+    "recommended_time": "16:00 - 16:50"
+  },
+  {
+    "id": "6bd8b0a4-2ba7-41e2-b15c-e2a6919bdb1a",
+    "name": "🔙 背部力量训练（背+二头）",
+    "done": false,
+    "date": "2026-06-05",
+    "duration_min": 60,
+    "recommended_time": "15:00 - 16:00"
+  },
+  {
+    "id": "187a61cd-52d6-41cb-914c-0b051e8f8170",
+    "name": "🔥 核心训练（卷腹/平板支撑/死虫式）",
+    "done": false,
+    "date": "2026-06-06",
+    "duration_min": 40,
+    "recommended_time": "10:00 - 10:40"
+  },
+  {
+    "id": "be41e1ec-8079-4c65-8958-cd32ec7f8716",
+    "name": "🏃 有氧：跳绳/高抬腿",
+    "done": false,
+    "date": "2026-06-06",
+    "duration_min": 20,
+    "recommended_time": "17:00 - 17:20"
+  },
+  {
+    "id": "40433189-82f2-4296-b2e4-9f1079441fe0",
+    "name": "🦵 下肢训练（腿+臀）",
+    "done": false,
+    "date": "2026-06-07",
+    "duration_min": 50,
+    "recommended_time": "10:00 - 10:50"
+  },
+  {
+    "id": "a6af2a49-5e94-44a3-b27a-8b54462a70be",
+    "name": "🧘 拉伸放松",
+    "done": false,
+    "date": "2026-06-07",
+    "duration_min": 20,
+    "recommended_time": "10:50 - 11:10"
   }
 ]

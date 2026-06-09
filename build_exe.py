@@ -13,12 +13,15 @@ def build():
     except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
 
+    icon_path = os.path.join(script_dir, "focus_planner.ico")
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--onefile",
         "--windowed",
         "--name", "FocusPlanner",
+        "--icon", icon_path,
         "--add-data", f"data{os.pathsep}data",
+        "--add-data", f"focus_planner.ico{os.pathsep}.",
         "--clean",
         main_py
     ]

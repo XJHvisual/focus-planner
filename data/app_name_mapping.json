@@ -1,0 +1,30 @@
+{
+  "_comment": "应用名称映射配置 - 用于 BuiltinTracker 进程名归一化",
+  "process_name_mapping": {
+    "valorant-win64-shipping": "valorant",
+    "pythonw": {
+      "title_contains": "专注规划器",
+      "map_to": "专注规划器"
+    },
+    "explorer": "文件资源管理器",
+    "qclaw": "QClaw",
+    "cs2": "CS2"
+  },
+  "window_title_mapping": {
+    "MainDialog": "鸣潮",
+    "鸣潮": "鸣潮",
+    "AppTimeTracker V2": "应用时间追踪器",
+    "QClaw": "QClaw",
+    "无畏契约": "valorant"
+  },
+  "ignore_apps": [
+    "nexus",
+    "nexusportable",
+    "rocketdock",
+    "rainmeter",
+    "wallpaperengine"
+  ],
+  "_comment_process_name_mapping": "进程名映射规则：key=原始进程名，value=映射后的名称 或 {title_contains, map_to} 对象",
+  "_comment_window_title_mapping": "窗口标题映射规则：当进程名为 unknown 时，根据窗口标题映射应用名",
+  "_comment_ignore_apps": "需要忽略的进程名列表（不记录时间）"
+}

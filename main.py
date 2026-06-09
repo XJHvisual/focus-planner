@@ -11,44 +11,28 @@ from datetime import datetime, date, timedelta
 from collections import defaultdict
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-LOCK_FILE = os.path.join(DATA_DIR, ".pid.lock")
+import tempfile
+
+_LOCK_DIR = os.path.join(tempfile.gettempdir(), "FocusPlannerLock")
 
 
 def is_another_instance_running():
-    """检查是否已有另一个实例在运行（跨平台，无额外依赖）"""
-    import ctypes
-    from ctypes.wintypes import DWORD, BOOL
-    if not os.path.exists(LOCK_FILE):
-        return False
+    """原子目录锁：Windows os.mkdir() 为原子操作，FileExistsError 表示已有实例"""
     try:
-        with open(LOCK_FILE, "r") as f:
-            old_pid = int(f.read().strip())
-    except (ValueError, IOError):
+        os.mkdir(_LOCK_DIR)
         return False
-    # 用 Windows API 检查进程是否存在
-    PROCESS_QUERY_INFORMATION = 0x0400
-    kernel32 = ctypes.windll.kernel32
-    h = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION, BOOL(False), DWORD(old_pid))
-    if h:
-        kernel32.CloseHandle(h)
-        return True  # 旧进程还在运行
-    # 旧进程已死，锁文件是残留的
-    return False
+    except FileExistsError:
+        return True
 
 
-def write_lock():
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(LOCK_FILE, "w") as f:
-        f.write(str(os.getpid()))
-
-
-def remove_lock():
+def _cleanup_lock():
+    """退出时清理锁目录"""
     try:
-        os.remove(LOCK_FILE)
-    except OSError:
+        os.rmdir(_LOCK_DIR)
+    except (OSError, FileNotFoundError):
         pass
 
-atexit.register(remove_lock)
+atexit.register(_cleanup_lock)
 GOALS_FILE = os.path.join(DATA_DIR, "goals.json")
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
 FREE_TIME_FILE = os.path.join(DATA_DIR, "free_time.json")
@@ -56,6 +40,160 @@ RECORDS_FILE = os.path.join(DATA_DIR, "records.json")
 FOCUS_FILE = os.path.join(DATA_DIR, "focus_log.json")
 TRAINING_LOG_FILE = os.path.join(DATA_DIR, "training_log.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
+
+# ============ 健身训练详情数据 ============
+FITNESS_DETAIL_DATA = {
+    0: {  # 周一 上肢
+        "title": "💪 周一：上肢力量训练（胸+肩+三头）",
+        "subtitle": "全天空闲 | 约60分钟 | 组间休息60秒",
+        "actions": [
+            (1, "俯卧撑", "4组 × 力竭",
+             "面朝下趴在瑜伽垫上，双手撑地略宽于肩，手指朝前，身体从头到脚成一条直线（不塌腰不撅臀）。弯曲手肘整体下降，直到胸部接近地面。用胸部和手臂力量推回到起始位置。全程核心收紧。",
+             "做不了标准版可双膝跪地做「跪姿俯卧撑」"),
+            (2, "哑铃卧推", "4组 × 10~12次",
+             "仰卧瑜伽垫上，双膝弯曲脚踩地。每只手各握一个哑铃举到胸部正上方，掌心朝脚的方向。手肘约45度角。缓慢下放直到哑铃碰到胸部两侧（或手肘碰地面），停顿1秒，用力推回。下放吸气，推起呼气。",
+             "推到顶端时不要猛烈锁死手肘"),
+            (3, "哑铃飞鸟", "3组 × 12~15次",
+             "仰卧瑜伽垫上，双手各持哑铃伸直举到胸部正上方，掌心相对。保持手肘微弯（固定角度不变），双臂向两侧缓慢打开，像「拥抱一个很大的人」，直到胸部被充分拉伸。停顿1秒，用胸部力量重合找回起始位置。",
+             "手肘角度全程不变，靠胸部发力不是手臂"),
+            (4, "哑铃推举", "4组 × 10~12次",
+             "坐在椅子或床边，挺胸收腹，双脚踩实地面。双手各持哑铃举到肩膀两侧，掌心朝前，手肘约90度，哑铃与耳朵齐平。用肩膀力量将哑铃向上推起直到手臂伸直（不要往后仰身体借力）。缓慢下放回起始位置。",
+             "不要往后仰身体借力，保持躯干稳定"),
+            (5, "哑铃侧平举", "3组 × 12~15次",
+             "站立，双脚与肩同宽，膝盖微屈。双手各持哑铃自然下垂，掌心相对。手肘微弯并保持固定，将双臂向两侧抬起，抬到与肩膀同高即可。感受肩部侧面发力。缓慢放下。",
+             "不要用太大重量，感受肩部侧面发力"),
+            (6, "哑铃俯身飞鸟", "3组 × 12~15次",
+             "站立，双脚与肩同宽，膝盖微屈。上半身向前俯身约45~60度，背部挺直（像鞠躬）。双手各持哑铃自然下垂，掌心相对。手肘微弯并固定，将哑铃向两侧抬起直到手臂与地面平行（或略高）。收缩肩胛骨，缓慢放下。",
+             "练肩膀后侧和上背部，重量不宜过大"),
+            (7, "哑铃颈后臂屈伸", "3组 × 12~15次",
+             "坐在椅子或床边，双手共握一只哑铃（两手托住一端，另一端朝下），举到头顶上方手臂伸直。保持上臂不动（贴近耳朵），弯曲手肘让哑铃向脑后下方缓慢下放，直到前臂有拉伸感。用力伸直手臂回到起始位置。",
+             "大臂全程不动，只有小臂在动；10kg太重可双手各持一个"),
+            (8, "窄距俯卧撑", "3组 × 力竭",
+             "和标准俯卧撑一样，但双手间距与肩同宽或更窄（约一拳距离）。手肘贴紧身体两侧不要向外打开。下放时手肘向后收，不是向两侧打开。推起时感受三头肌发力。",
+             "同样可以跪姿做"),
+        ]
+    },
+    1: {  # 周二 核心+有氧
+        "title": "🔥 周二/周六：核心 + 有氧",
+        "subtitle": "晚上空闲 | 约30~40分钟 | 时间紧张可只做核心15min",
+        "actions": [
+            (1, "卷腹", "4组 × 20次",
+             "仰卧瑜伽垫上，双膝弯曲脚踩地。双手轻轻放在耳朵两侧（不抱头）。下背（腰部）始终贴紧地面。用腹部力量将肩胛骨抬离地面即可（不需要坐起来）。缓慢下放，感受腹肌持续张力。",
+             "是「卷起来」不是「坐起来」，幅度小但发力更集中；脖子放松"),
+            (2, "俄罗斯转体", "3组 × 30次",
+             "坐在瑜伽垫上，双膝弯曲脚踩地。上半身向后倾斜约45度，背部挺直。双手在胸前合十（或抱哑铃增加难度）。用腹部力量将上半身左右旋转，尽量让手触碰身体两侧地面。",
+             "是躯干在旋转，不是只用手左右摆；转时尽量让手碰地面"),
+            (3, "平板支撑", "3组 × 45~60秒",
+             "俯卧瑜伽垫上，用前臂（手肘到拳头）撑地，手肘在肩膀正下方。双脚并拢或略分开，脚尖点地。身体从头到脚成一条直线（不塌腰不撅臀）。收紧核心，保持自然呼吸。",
+             "如果腰部酸痛说明塌腰了，立刻调整；宁可时间短也要标准"),
+            (4, "死虫式", "3组 × 每侧10次",
+             "仰卧瑜伽垫上，双手伸直朝天花板，双腿抬起膝盖弯曲90度（小腿与地面平行）。腰部贴紧地面（最重要）。缓慢将右手向头顶伸展同时左腿伸直（不碰地），然后收回。换侧交替进行。全程腰部不能拱起！",
+             "全程腰部不能离开地面！腰部拱起说明幅度太大，减小幅度"),
+            (5, "登山跑", "3组 × 30秒",
+             "从高位平板支撑姿势开始（双手撑地手臂伸直，身体成直线）。交替将左右膝盖快速向胸部方向提拉，像在地面上跑步一样，但身体保持稳定不动。保持核心收紧，呼吸均匀。",
+             "臀部不要抬太高，身体尽量保持平稳"),
+            (6, "跳绳 / 高抬腿", "15~20分钟",
+             "跳绳：中等速度保持节奏。高抬腿（空间不够时）：站立交替快速抬膝至腰部高度，手臂自然摆动。强度：微微出汗、能说话但略喘。可间歇进行（练30秒歇30秒）。",
+             "中等强度有氧，不需要一直不停"),
+        ]
+    },
+    3: {  # 周四 下肢
+        "title": "🦵 周四/周日：下肢力量训练",
+        "subtitle": "周四晚上40~50min | 周日全天50min+拉伸",
+        "actions": [
+            (1, "哑铃深蹲", "4组 × 12~15次",
+             "站立，双脚与肩同宽或略宽，脚尖微微朝外。双手各持哑铃自然下垂。挺胸，背部挺直，目视前方。弯曲膝盖和髋部，像「往椅子上坐」一样下蹲，直到大腿至少与地面平行。用臀部和大腿力量站起。",
+             "全程背部挺直不弯腰驼背；下蹲吸气站起呼气"),
+            (2, "哑铃箭步蹲", "3组 × 每侧12次",
+             "站立，双手各持哑铃垂于身体两侧。右脚向前迈出一大步。弯曲双膝，身体直直下降直到后膝接近地面（不碰地）。前膝不超过脚尖太多。用前腿力量站起回到起始位置。左右交替。",
+             "身体保持直立不前倾；步幅要够大，否则前膝压力太大"),
+            (3, "哑铃罗马尼亚硬拉", "4组 × 10~12次",
+             "站立，双脚与髋同宽，膝盖微弯（全程保持微弯不锁死）。双手各持哑铃垂于身体前方。挺胸，背部完全挺直。以髋部为轴，上半身向前俯身约45度，感受大腿后侧拉伸。臀部往前推回到直立位。",
+             "不是弯腰！是「髋关节铰链」动作，臀部往后推，背部全程挺直"),
+            (4, "哑铃提踵", "4组 × 15~20次",
+             "站立，双手各持哑铃垂于身体两侧。找一本厚书或站在瑜伽垫边缘（让脚跟悬空）。缓慢踮起脚尖，用小腿力量将身体向上推。在最高点停顿1-2秒，缓慢放下脚跟感受拉伸。",
+             "动作要慢，感受小腿的收缩和拉伸"),
+            (5, "臀桥", "3组 × 15次",
+             "仰卧瑜伽垫上，双膝弯曲脚踩地（脚跟靠近臀部）。双手自然放在身体两侧掌心朝下。用臀部力量将髋部向上推起，直到身体从膝盖到肩膀成一条直线。在顶端夹紧臀部1秒，缓慢放下。",
+             "想增加难度可在小腹上放一个哑铃"),
+            (6, "靠墙静蹲", "3组 × 45~60秒",
+             "背靠墙壁站立，双脚向前迈出约一步距离。背部贴紧墙面，弯曲膝盖身体沿墙面下滑。滑到大腿与地面平行（像坐在隐形的椅子上）。保持这个姿势，小腿与地面垂直。",
+             "小腿与地面垂直，膝盖不超过脚尖；太难可先蹲浅一点"),
+        ]
+    },
+    4: {  # 周五 背部
+        "title": "🔙 周五：背部力量训练（窄距引体+二头）",
+        "subtitle": "全天空闲 | 约60分钟 | 组间休息60秒",
+        "actions": [
+            (1, "窄距引体向上", "4组 × 力竭",
+             "双手正握单杠（掌心朝前），间距约与肩同宽或略窄。双臂完全伸直身体悬垂。用背部和手臂力量将身体向上拉，直到下巴过杠。拉起时肩胛骨向下向后收（想象把腋窝塞进裤兜里）。缓慢下放到手臂伸直。",
+             "做不了可用：跳起借力（重点练离心）、脚踩凳子辅助、弹力带辅助"),
+            (2, "哑铃单臂划船", "4组 × 每侧10~12次",
+             "左侧身体朝向瑜伽垫，左膝和左手撑在垫子上（左手在肩膀正下方）。右脚向后伸或右膝也跪在垫子上。右手持哑铃手臂自然下垂。背部挺直，用背部力量将哑铃向腰腹部拉起（想象用手肘去碰天花板）。顶峰收缩1秒，缓慢放下。",
+             "背部全程挺直；不要用手臂发力拉"),
+            (3, "哑铃俯身划船（双手）", "3组 × 12次",
+             "站立，双脚与肩同宽，膝盖微弯。上半身向前俯身约45度，背部挺直。双手各持哑铃自然下垂，掌心相对。将哑铃向身体两侧（腰腹部方向）拉起。顶峰收缩肩胛骨，缓慢放下。",
+             "与俯身飞鸟的区别：划船是往身体方向拉（手肘弯曲），飞鸟是往两侧打开（手肘固定）"),
+            (4, "哑铃弯举", "4组 × 10~12次",
+             "站立，双脚与肩同宽，膝盖微屈。双手各持哑铃自然下垂，掌心朝前。上臂贴紧身体两侧不动，弯曲手肘将哑铃向上弯举到肩膀前方。停顿1秒，缓慢放下（约2秒感受拉伸）。",
+             "不要甩腰借力，上臂全程不动；放下时约2秒感受拉伸"),
+            (5, "锤式弯举", "3组 × 12次",
+             "和普通弯举姿势一样，但掌心相对（像握锤子一样）而不是朝前。同样弯曲手肘将哑铃向上弯举到肩膀前方。缓慢放下。",
+             "练肱肌（手臂外侧），能让手臂看起来更粗"),
+            (6, "单杠悬垂", "3组 × 30~45秒",
+             "双手正握单杠，手臂伸直，身体自然悬垂。全身放松让身体自然拉伸。保持30~45秒。",
+             "拉伸脊柱和背部肌肉，增强握力，改善体态"),
+        ]
+    },
+    5: {  # 周六 核心+有氧（复用周二）
+        "title": "🔥 周六：核心 + 有氧",
+        "subtitle": "全天空闲 | 约30~40分钟 | 时间紧张可只做核心15min",
+        "actions": [
+            (1, "卷腹", "4组 × 20次",
+             "仰卧瑜伽垫上，双膝弯曲脚踩地。双手轻轻放在耳朵两侧（不抱头）。下背（腰部）始终贴紧地面。用腹部力量将肩胛骨抬离地面即可（不需要坐起来）。缓慢下放，感受腹肌持续张力。",
+             "是「卷起来」不是「坐起来」，幅度小但发力更集中；脖子放松"),
+            (2, "俄罗斯转体", "3组 × 30次",
+             "坐在瑜伽垫上，双膝弯曲脚踩地。上半身向后倾斜约45度，背部挺直。双手在胸前合十（或抱哑铃增加难度）。用腹部力量将上半身左右旋转，尽量让手触碰身体两侧地面。",
+             "是躯干在旋转，不是只用手左右摆；转时尽量让手碰地面"),
+            (3, "平板支撑", "3组 × 45~60秒",
+             "俯卧瑜伽垫上，用前臂（手肘到拳头）撑地，手肘在肩膀正下方。双脚并拢或略分开，脚尖点地。身体从头到脚成一条直线（不塌腰不撅臀）。收紧核心，保持自然呼吸。",
+             "如果腰部酸痛说明塌腰了，立刻调整；宁可时间短也要标准"),
+            (4, "死虫式", "3组 × 每侧10次",
+             "仰卧瑜伽垫上，双手伸直朝天花板，双腿抬起膝盖弯曲90度（小腿与地面平行）。腰部贴紧地面（最重要）。缓慢将右手向头顶伸展同时左腿伸直（不碰地），然后收回。换侧交替进行。全程腰部不能拱起！",
+             "全程腰部不能离开地面！腰部拱起说明幅度太大，减小幅度"),
+            (5, "登山跑", "3组 × 30秒",
+             "从高位平板支撑姿势开始（双手撑地手臂伸直，身体成直线）。交替将左右膝盖快速向胸部方向提拉，像在地面上跑步一样，但身体保持稳定不动。保持核心收紧，呼吸均匀。",
+             "臀部不要抬太高，身体尽量保持平稳"),
+            (6, "跳绳 / 高抬腿", "15~20分钟",
+             "跳绳：中等速度保持节奏。高抬腿（空间不够时）：站立交替快速抬膝至腰部高度，手臂自然摆动。强度：微微出汗、能说话但略喘。可间歇进行（练30秒歇30秒）。",
+             "中等强度有氧，不需要一直不停"),
+        ]
+    },
+    6: {  # 周日 下肢力量（复用周四）
+        "title": "🦵 周日：下肢力量训练",
+        "subtitle": "全天空闲 | 约50min+拉伸",
+        "actions": [
+            (1, "哑铃深蹲", "4组 × 12~15次",
+             "站立，双脚与肩同宽或略宽，脚尖微微朝外。双手各持哑铃自然下垂。挺胸，背部挺直，目视前方。弯曲膝盖和髋部，像「往椅子上坐」一样下蹲，直到大腿至少与地面平行。用臀部和大腿力量站起。",
+             "全程背部挺直不弯腰驼背；下蹲吸气站起呼气"),
+            (2, "哑铃箭步蹲", "3组 × 每侧12次",
+             "站立，双手各持哑铃垂于身体两侧。右脚向前迈出一大步。弯曲双膝，身体直直下降直到后膝接近地面（不碰地）。前膝不超过脚尖太多。用前腿力量站起回到起始位置。左右交替。",
+             "身体保持直立不前倾；步幅要够大，否则前膝压力太大"),
+            (3, "哑铃罗马尼亚硬拉", "4组 × 10~12次",
+             "站立，双脚与髋同宽，膝盖微弯（全程保持微弯不锁死）。双手各持哑铃垂于身体前方。挺胸，背部完全挺直。以髋部为轴，上半身向前俯身约45度，感受大腿后侧拉伸。臀部往前推回到直立位。",
+             "不是弯腰！是「髋关节铰链」动作，臀部往后推，背部全程挺直"),
+            (4, "哑铃提踵", "4组 × 15~20次",
+             "站立，双手各持哑铃垂于身体两侧。找一本厚书或站在瑜伽垫边缘（让脚跟悬空）。缓慢踮起脚尖，用小腿力量将身体向上推。在最高点停顿1-2秒，缓慢放下脚跟感受拉伸。",
+             "动作要慢，感受小腿的收缩和拉伸"),
+            (5, "臀桥", "3组 × 15次",
+             "仰卧瑜伽垫上，双膝弯曲脚踩地（脚跟靠近臀部）。双手自然放在身体两侧掌心朝下。用臀部力量将髋部向上推起，直到身体从膝盖到肩膀成一条直线。在顶端夹紧臀部1秒，缓慢放下。",
+             "想增加难度可在小腹上放一个哑铃"),
+            (6, "靠墙静蹲", "3组 × 45~60秒",
+             "背靠墙壁站立，双脚向前迈出约一步距离。背部贴紧墙面，弯曲膝盖身体沿墙面下滑。滑到大腿与地面平行（像坐在隐形的椅子上）。保持这个姿势，小腿与地面垂直。",
+             "小腿与地面垂直，膝盖不超过脚尖；太难可先蹲浅一点"),
+        ]
+    },
+}
 
 
 # ============ 数据管理 ============
@@ -1725,15 +1863,13 @@ class WeekTab(ttk.Frame):
         self._header_y = 0  # 追踪表头当前 y 坐标
 
         self.canvas = tk.Canvas(self, bg="white", highlightthickness=0)
-        vsb = ttk.Scrollbar(self, orient="vertical", command=self._on_yscroll)
-        hsb = ttk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.canvas.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-        vsb.pack(side="right", fill="y")
-        hsb.pack(side="bottom", fill="x")
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind("<Configure>", lambda e: self.draw())
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<MouseWheel>", lambda e: self._on_yscroll("scroll", -1 * e.delta / 120, "units"))
+        self.canvas.bind("<Motion>", self.on_hover)
+        self.canvas.bind("<Leave>", self.on_leave)
+        self._last_hover_di = None  # 当前悬停的日期列索引
 
     def _on_yscroll(self, *args):
         """滚动时锁定表头在可视区顶部"""
@@ -1743,6 +1879,52 @@ class WeekTab(ttk.Frame):
         if new_y != self._header_y:
             self.canvas.move("header", 0, new_y - self._header_y)
             self._header_y = new_y
+
+    def on_hover(self, event):
+        """鼠标移到日期头上方时变手型+高亮"""
+        items = self.canvas.find_overlapping(event.x, event.y, event.x, event.y)
+        found_di = None
+        for i in items:
+            for tag in self.canvas.gettags(i):
+                if tag.startswith("wkh_") or tag.startswith("wkt_fit_"):
+                    found_di = int(tag.split("_")[-1])
+                    break
+            if found_di is not None:
+                break
+
+        if found_di is not None:
+            self.canvas.config(cursor="hand2")
+            if found_di != self._last_hover_di:
+                self._unhighlight_header()
+                self._highlight_header(found_di)
+                self._last_hover_di = found_di
+        else:
+            if self._last_hover_di is not None:
+                self._unhighlight_header()
+                self._last_hover_di = None
+            if self.canvas.cget("cursor") != "arrow":
+                self.canvas.config(cursor="arrow")
+
+    def _highlight_header(self, di):
+        """高亮指定列的表头（浅蓝色背景矩形）"""
+        c = self.canvas
+        W = max(c.winfo_width(), 700)
+        DAY_W = (W - 8) // 7
+        x = di * DAY_W
+        c.create_rectangle(x + 2, 3, x + DAY_W - 2, 41,
+                          fill="#E3F2FD", outline="", tags="_hover")
+        c.tag_lower("_hover", "header")
+
+    def _unhighlight_header(self):
+        """取消高亮"""
+        self.canvas.delete("_hover")
+
+    def on_leave(self, event):
+        """鼠标离开画布时恢复光标"""
+        if self._last_hover_di is not None:
+            self._unhighlight_header()
+            self._last_hover_di = None
+        self.canvas.config(cursor="arrow")
 
     def _monday(self):
         today = date.today()
@@ -1770,9 +1952,13 @@ class WeekTab(ttk.Frame):
 
         tasks = DataManager.load(TASKS_FILE)
 
-        W = max(c.winfo_width(), 900)
+        W = max(c.winfo_width(), 700)
         HEADER_H = 44
-        DAY_W = max(120, (W - 8) // 7)
+        DAY_W = (W - 8) // 7
+        total_w = 7 * DAY_W + 4
+        # 用实际画布宽设滚动区,内容不裁切
+        if total_w > W:
+            W = total_w
         CARD_H = 70
         CARD_PAD = 3
 
@@ -1783,7 +1969,6 @@ class WeekTab(ttk.Frame):
                  "#F9D7D7", "#B2DFDB", "#DCEDC8"]
 
         today = date.today()
-        total_w = 7 * DAY_W + 4
 
         # ── 表头（tag="header"，随滚动锁定在顶部）──
         c.create_rectangle(0, 0, total_w, HEADER_H, fill="#F8F9FA", outline="", tags="header")
@@ -1816,9 +2001,12 @@ class WeekTab(ttk.Frame):
             ds = d.isoformat()
             day_tasks = [t for t in tasks if t.get("date") == ds]
             day_tasks.sort(key=lambda t: t.get("recommended_time", "23:59"))
-            if len(day_tasks) > max_rows:
-                max_rows = len(day_tasks)
             x0 = di * DAY_W
+
+            has_fitness = (di in FITNESS_DETAIL_DATA)
+            day_rows = len(day_tasks) + (1 if has_fitness else 0)
+            if day_rows > max_rows:
+                max_rows = day_rows
 
             for row, t in enumerate(day_tasks):
                 by1 = HEADER_H + row * (CARD_H + CARD_PAD) + 2
@@ -1856,8 +2044,30 @@ class WeekTab(ttk.Frame):
                                   text="✅", anchor="e",
                                   font=("Microsoft YaHei", 11), tags=tags)
 
+            # 健身训练卡片（粉色系，与普通任务区分）
+            if has_fitness:
+                fit_row = len(day_tasks)
+                by1 = HEADER_H + fit_row * (CARD_H + CARD_PAD) + 2
+                by2 = by1 + CARD_H
+                bx1 = x0 + 4
+                bx2 = x0 + DAY_W - 4
+                ftag = f"wkt_fit_{di}"
+                fit_data = FITNESS_DETAIL_DATA[di]
+                short_title = fit_data["title"].split("：", 1)[1] if "：" in fit_data["title"] else fit_data["title"]
+                c.create_rectangle(bx1, by1, bx2, by2,
+                                    fill="#FFF3E0", outline="#FFB74D", tags=ftag)
+                c.create_rectangle(bx1, by1, bx1 + 4, by2,
+                                    fill="#FF9800", outline="", tags=ftag)
+                c.create_text(bx1 + 10, by1 + 6,
+                              text="🏋️ 健身", anchor="w",
+                              fill="#E65100", font=("Microsoft YaHei", 7), tags=ftag)
+                c.create_text(bx1 + 10, by1 + CARD_H // 2 + 8,
+                              text=short_title, anchor="w",
+                              fill="#E65100", font=("Microsoft YaHei", 8),
+                              width=bx2 - bx1 - 16, tags=ftag)
+
         content_h = HEADER_H + 2 + max_rows * (CARD_H + CARD_PAD) + 20
-        c.config(scrollregion=(0, 0, total_w, content_h))
+        c.config(scrollregion=(0, 0, W, content_h))
 
         # 表头立即对齐到当前可视区顶部
         top_y = c.canvasy(0)
@@ -1872,6 +2082,15 @@ class WeekTab(ttk.Frame):
             for tag in self.canvas.gettags(i):
                 if tag.startswith("wkh_"):
                     di = int(tag[4:])
+                    d = self._monday() + timedelta(days=di)
+                    self.show_day_detail(d)
+                    return
+
+        # 检查是否点了健身卡片
+        for i in items:
+            for tag in self.canvas.gettags(i):
+                if tag.startswith("wkt_fit_"):
+                    di = int(tag[8:])
                     d = self._monday() + timedelta(days=di)
                     self.show_day_detail(d)
                     return
@@ -1891,15 +2110,100 @@ class WeekTab(ttk.Frame):
                     self.app.task_tab.refresh_task_list()
                     return
 
+    def _show_fitness_detail(self, dlg, wd):
+        """在弹窗中展示健身训练详细动作表（支持文本换行）"""
+        detail = FITNESS_DETAIL_DATA.get(wd)
+        if not detail:
+            return False
+
+        # 更新标题为健身主题
+        for widget in dlg.winfo_children():
+            if isinstance(widget, tk.Frame):
+                for child in widget.winfo_children():
+                    if isinstance(child, tk.Label):
+                        child.config(text=detail["title"])
+                        break
+                break
+
+        # 副标题
+        sub = tk.Label(dlg, text=detail["subtitle"], font=("Microsoft YaHei", 9),
+                        bg="#FFFFFF", fg="#666")
+        sub.pack(padx=16, pady=(2, 8))
+
+        # Canvas + Frame 手动绘制表格
+        list_frame = tk.Frame(dlg, bg="#FFFFFF")
+        list_frame.pack(fill="both", expand=True, padx=16, pady=(0, 8))
+
+        canvas = tk.Canvas(list_frame, bg="#FFFFFF", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        inner = tk.Frame(canvas, bg="#FFFFFF")
+        canvas.create_window((0, 0), window=inner, anchor="nw")
+
+        # 表头
+        header_bg = "#1976D2"
+        header_fg = "#FFFFFF"
+        tk.Label(inner, text="序号", width=5, font=("Microsoft YaHei", 9, "bold"),
+                 bg=header_bg, fg=header_fg, padx=2, pady=4).grid(row=0, column=0, sticky="nsew")
+        tk.Label(inner, text="动作名称", width=12, font=("Microsoft YaHei", 9, "bold"),
+                 bg=header_bg, fg=header_fg, padx=2, pady=4).grid(row=0, column=1, sticky="nsew")
+        tk.Label(inner, text="组数×次数", width=11, font=("Microsoft YaHei", 9, "bold"),
+                 bg=header_bg, fg=header_fg, padx=2, pady=4).grid(row=0, column=2, sticky="nsew")
+        tk.Label(inner, text="详细说明", width=48, font=("Microsoft YaHei", 9, "bold"),
+                 bg=header_bg, fg=header_fg, padx=4, pady=4).grid(row=0, column=3, sticky="nsew")
+        tk.Label(inner, text="注意事项", width=32, font=("Microsoft YaHei", 9, "bold"),
+                 bg=header_bg, fg=header_fg, padx=4, pady=4).grid(row=0, column=4, sticky="nsew")
+
+        # 数据行
+        for r, (seq, name, sets, desc, note) in enumerate(detail["actions"], start=1):
+            row_bg = "#F8F9FA" if r % 2 == 0 else "#FFFFFF"
+            tk.Label(inner, text=str(seq), width=5, font=("Microsoft YaHei", 9),
+                     bg=row_bg, anchor="center", padx=2, pady=3).grid(row=r, column=0, sticky="nsew")
+            tk.Label(inner, text=name, width=12, font=("Microsoft YaHei", 9),
+                     bg=row_bg, anchor="w", padx=2, pady=3).grid(row=r, column=1, sticky="nsew")
+            tk.Label(inner, text=sets, width=11, font=("Microsoft YaHei", 9),
+                     bg=row_bg, anchor="center", padx=2, pady=3).grid(row=r, column=2, sticky="nsew")
+            lbl_desc = tk.Label(inner, text=desc, font=("Microsoft YaHei", 9),
+                               bg=row_bg, anchor="w", justify="left",
+                               padx=4, pady=3, wraplength=380)
+            lbl_desc.grid(row=r, column=3, sticky="nsew")
+            lbl_note = tk.Label(inner, text=note, font=("Microsoft YaHei", 9),
+                               bg=row_bg, anchor="w", justify="left",
+                               padx=4, pady=3, wraplength=260)
+            lbl_note.grid(row=r, column=4, sticky="nsew")
+
+        for col in range(5):
+            inner.columnconfigure(col, weight=1 if col >= 3 else 0)
+
+        def _configure_inner(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        inner.bind("<Configure>", _configure_inner)
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * event.delta / 120), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        def _on_destroy():
+            canvas.unbind_all("<MouseWheel>")
+        dlg.bind("<Destroy>", lambda e: _on_destroy())
+
+        # 底部按钮
+        btn_frame = tk.Frame(dlg, bg="#FFFFFF")
+        btn_frame.pack(pady=(0, 14))
+        ttk.Button(btn_frame, text="关闭", command=dlg.destroy, width=12).pack()
+        return True
+
     def show_day_detail(self, day_date):
-        """弹出某一天的详细计划"""
+        """弹出某一天的详细计划（含健身训练详情）"""
         DAYS_CN = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
         wd = day_date.weekday()
         title = f"{DAYS_CN[wd]} {day_date.strftime('%m月%d日')}"
 
         dlg = tk.Toplevel(self)
         dlg.title(f"📅 {title}")
-        dlg.geometry("420x450")
+        dlg.geometry("920x560")
         dlg.transient(self.winfo_toplevel())
         dlg.configure(bg="#FFFFFF")
 
@@ -1909,7 +2213,11 @@ class WeekTab(ttk.Frame):
         tk.Label(hf, text=f"📅 {title}", font=("Microsoft YaHei", 13, "bold"),
                  bg="#FFFFFF", fg="#333").pack(side="left")
 
-        # 任务列表
+        # 检查是否有健身训练详情数据
+        if self._show_fitness_detail(dlg, wd):
+            return
+
+        # 无健身详情时显示普通任务列表
         list_frame = tk.Frame(dlg, bg="#FFFFFF")
         list_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
 
@@ -1930,7 +2238,6 @@ class WeekTab(ttk.Frame):
         sb.pack(side="right", fill="y")
         tree.bind("<MouseWheel>", lambda e: tree.yview_scroll(int(-1 * e.delta / 120), "units"))
 
-        # 填充数据
         tasks = DataManager.load(TASKS_FILE)
         ds = day_date.isoformat()
         day_tasks = [t for t in tasks if t.get("date") == ds]
@@ -1954,7 +2261,6 @@ class WeekTab(ttk.Frame):
                     t["done"] = not t["done"]
                     break
             DataManager.save(TASKS_FILE, tasks)
-            # 刷新弹窗
             tree.delete(*tree.get_children())
             for t in tasks:
                 if t.get("date") == ds:
@@ -1962,7 +2268,6 @@ class WeekTab(ttk.Frame):
                     dur = f"{t.get('duration_min', 30)}min"
                     status = "✅" if t["done"] else "⬜"
                     tree.insert("", "end", iid=t["id"], values=(rec, t["name"], dur, status))
-            # 刷新主视图
             self.draw()
             self.app.task_tab.refresh_task_list()
 
@@ -2357,9 +2662,6 @@ class ProgressTab(ttk.Frame):
         ttk.Label(row1, text="体重(kg):", width=9).pack(side="left")
         self.weight_var = tk.StringVar()
         ttk.Entry(row1, textvariable=self.weight_var, width=7).pack(side="left", padx=(0,15))
-        ttk.Label(row1, text="腰围(cm):", width=9).pack(side="left")
-        self.waist_var = tk.StringVar()
-        ttk.Entry(row1, textvariable=self.waist_var, width=7).pack(side="left", padx=(0,15))
         ttk.Button(row1, text="💾 保存记录", command=self.save_record).pack(side="left")
 
         # 中部：体重曲线 + 完成率（无框，用标题+色块区分）
@@ -2389,16 +2691,14 @@ class ProgressTab(ttk.Frame):
         # 下部：记录表
         bot = ttk.LabelFrame(self, text="📋 历史记录", padding=5)
         bot.pack(fill="both", expand=True, padx=10, pady=(0,5))
-        cols = ("date", "weight", "waist", "training_done", "training_total")
+        cols = ("date", "weight", "training_done", "training_total")
         self.rec_tree = ttk.Treeview(bot, columns=cols, show="headings", height=6)
         self.rec_tree.heading("date", text="日期")
         self.rec_tree.heading("weight", text="体重(kg)")
-        self.rec_tree.heading("waist", text="腰围(cm)")
         self.rec_tree.heading("training_done", text="完成训练")
         self.rec_tree.heading("training_total", text="总训练")
         self.rec_tree.column("date", width=100)
         self.rec_tree.column("weight", width=80)
-        self.rec_tree.column("waist", width=80)
         self.rec_tree.column("training_done", width=80)
         self.rec_tree.column("training_total", width=80)
         rec_sb = ttk.Scrollbar(bot, orient="vertical", command=self.rec_tree.yview)
@@ -2419,7 +2719,6 @@ class ProgressTab(ttk.Frame):
     def save_record(self):
         ds = self.date_var.get().strip()
         w = self.weight_var.get().strip()
-        wa = self.waist_var.get().strip()
         if not ds:
             messagebox.showwarning("提示", "请输入日期")
             return
@@ -2431,16 +2730,9 @@ class ProgressTab(ttk.Frame):
             except ValueError:
                 messagebox.showerror("错误", "体重必须是数字")
                 return
-        if wa:
-            try:
-                entry["waist"] = float(wa)
-            except ValueError:
-                messagebox.showerror("错误", "腰围必须是数字")
-                return
         log[ds] = entry
         self._save_log(log)
         self.weight_var.set("")
-        self.waist_var.set("")
         self.refresh_progress()
         messagebox.showinfo("成功", f"{ds} 数据已保存")
 
@@ -2464,7 +2756,6 @@ class ProgressTab(ttk.Frame):
             self.rec_tree.insert("", "end", values=(
                 ds,
                 f"{entry.get('weight', '-')}" if entry.get('weight') else "-",
-                f"{entry.get('waist', '-')}" if entry.get('waist') else "-",
                 entry.get("training_done", 0),
                 entry.get("training_total", 0)
             ))
@@ -2596,15 +2887,6 @@ class ProgressTab(ttk.Frame):
 
 class FocusPlannerApp:
     def __init__(self):
-        # 单实例锁
-        if is_another_instance_running():
-            self.root = tk.Tk()
-            self.root.withdraw()
-            messagebox.showwarning("提示", "专注规划器已在运行中！\n请检查系统托盘或任务栏。")
-            self.root.destroy()
-            sys.exit(0)
-
-        write_lock()
 
         self.root = tk.Tk()
         self.root.title("专注规划器 v3.0")
@@ -2739,7 +3021,6 @@ class FocusPlannerApp:
 
     def on_close(self):
         self.tracker.stop()
-        remove_lock()
         self.root.destroy()
 
     # ── 样式 ──
@@ -2869,4 +3150,6 @@ class FocusPlannerApp:
 
 
 if __name__ == "__main__":
+    if is_another_instance_running():
+        os._exit(0)
     FocusPlannerApp()
