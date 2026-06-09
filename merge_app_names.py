@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """合并数据库中的旧应用名记录"""
 import sqlite3
+import os
 
-conn = sqlite3.connect('data/tracker_v2.db')
+db_path = os.path.join(os.path.dirname(__file__), 'data', 'tracker_v2.db')
+conn = sqlite3.connect(db_path)
 cur = conn.cursor()
 
 # 查找需要合并的记录

@@ -1,10 +1,24 @@
 #!/usr/bin/env python3
 """
+⚠️ 历史脚本警告 ⚠️
+========================
+此脚本仅作为参考记录，不再实际运行使用。
+它记录了修复 BuiltinTracker 配置加载问题的思路，
+但真正的修复已通过其他方式（手动修改 main.py）完成。
+
+问题记录：
+1. 原本缺少 import sys（第27行 hasattr(sys, '_MEIPASS') 会 NameError）
+2. 整份代码只打印了"需要手动修复"，没有实际修改功能
+
+保留此文件仅作为历史参考，不要用于生产环境。
+========================
+
 修复 BuiltinTracker 的配置加载问题
 将配置加载代码从类定义内部移到模块级别
 """
 
 import os
+import sys
 import json
 import re
 

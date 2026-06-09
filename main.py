@@ -1209,8 +1209,9 @@ class TaskTab(ttk.Frame):
                     break
             DataManager.save(TASKS_FILE, tasks)
             self.draw_schedule()
+            today_tasks = [t for t in tasks if t.get('date', date.today().isoformat()) == date.today().isoformat()]
             self.progress_var.set(
-                f"进度：{sum(1 for t in tasks if t.get('date', date.today().isoformat()) == date.today().isoformat() and t['done'])}/{len(tasks)}"
+                f"进度：{sum(1 for t in today_tasks if t['done'])}/{len(today_tasks)}"
             )
             break
 
@@ -2322,20 +2323,19 @@ class BuiltinTracker:
         )""")
         conn.commit()
         # 一次性迁移：从旧 AppTimeTracker V2 数据库导入已有记录
-        old_db = "D:/QClawWorkspace/app-time-tracker-v2/dist/data/tracker_v2.db"
+        old_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app-time-tracker-v2", "dist", "data", "tracker_v2.db")
         if os.path.exists(old_db):
             cur = conn.execute("SELECT COUNT(*) FROM usage_records")
             if cur.fetchone()[0] == 0:
                 try:
-                    old_conn = sqlite3.connect(old_db)
-                    old_conn.execute("ATTACH ? AS local_db", (TRACKER_DB,))
-                    old_conn.execute(
-                        "INSERT OR IGNORE INTO local_db.usage_records(app_name, window_title, start_time, end_time, duration_seconds, category, productivity_score) SELECT app_name, window_title, start_time, end_time, duration_seconds, category, productivity_score FROM usage_records"
+                    conn.execute("ATTACH ? AS old_db", (old_db,))
+                    conn.execute(
+                        "INSERT OR IGNORE INTO usage_records(app_name, window_title, start_time, end_time, duration_seconds, category, productivity_score) SELECT app_name, window_title, start_time, end_time, duration_seconds, category, productivity_score FROM old_db.usage_records"
                     )
-                    old_conn.commit()
-                    old_conn.close()
-                except Exception:
-                    pass
+                    conn.commit()
+                    conn.execute("DETACH DATABASE old_db")
+                except Exception as e:
+                    print(f"数据迁移失败: {e}")
         conn.close()
 
     _title_map = {
@@ -3151,5 +3151,6 @@ class FocusPlannerApp:
 
 if __name__ == "__main__":
     if is_another_instance_running():
-        os._exit(0)
+        _cleanup_lock()
+        sys.exit(0)
     FocusPlannerApp()
