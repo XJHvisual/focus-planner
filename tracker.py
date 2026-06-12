@@ -66,6 +66,9 @@ class BuiltinTracker:
         "AppTimeTracker V2": "应用时间追踪器",
         "QClaw": "QClaw",
         "无畏契约": "valorant",
+        "战绩结算弹窗": "valorant",
+        "VALORANT": "valorant",
+        "Riot Client": "valorant",
         "Hermes": "Hermes",
     }
     # 标题关键词映射（含deepseek/gemini等模型名 → Hermes）
