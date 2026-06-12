@@ -77,6 +77,7 @@ class BuiltinTracker:
     def _get_foreground(self):
         """通过 Win32 API 获取当前前台窗口信息"""
         import ctypes
+        import re
         from ctypes import wintypes
         try:
             hwnd = ctypes.windll.user32.GetForegroundWindow()
@@ -110,7 +111,6 @@ class BuiltinTracker:
                 return None, ""
 
             # 进程名归一化
-            import re
             # 通用：去掉 _pc、_x64、-win64-*、_win32_* 等平台/版本后缀
             process_name = re.sub(r'[-_](pc|x64|x86|win64.*|win32.*)$', '', process_name, flags=re.IGNORECASE)
             if process_name == "valorant-win64-shipping":
@@ -141,7 +141,7 @@ class BuiltinTracker:
                 if not matched and process_name == "unknown":
                     # 用标题作为应用名（前20字符）
                     clean = title.strip()
-                    process_name = clean[:20] if len(clean) <= 20 else clean[:18] + "…"
+                    process_name = clean[:20].lower() if len(clean) <= 20 else clean[:18].lower() + "…"
             elif process_name == "unknown" and (not title or not title.strip()):
                 return None, ""
 
