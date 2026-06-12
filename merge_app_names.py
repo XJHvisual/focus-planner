@@ -17,7 +17,7 @@ for row in cur.fetchall():
 merge_map = {
     'cs2': 'CS2',
     'explorer': '文件资源管理器',
-    'pythonw': '专注规划器',
+    'pythonw': '拾光',
     'valorant-win64-shipping': 'valorant'
 }
 

@@ -1,4 +1,4 @@
-"""FocusPlanner - 专注规划器 v3.1"""
+"""拾光 - 考研时光伴侣 v3.1"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
@@ -20,7 +20,7 @@ class FocusPlannerApp:
     def __init__(self):
 
         self.root = tk.Tk()
-        self.root.title("专注规划器 v3.0")
+        self.root.title("拾光 v3.1")
         self.root.geometry("800x600")
         self.root.minsize(700, 500)
 
@@ -30,7 +30,7 @@ class FocusPlannerApp:
         # 头部
         header = ttk.Frame(self.root)
         header.pack(fill="x", padx=12, pady=(12, 0))
-        ttk.Label(header, text="📖 专注规划器",
+        ttk.Label(header, text="📖 拾光",
                   font=("Microsoft YaHei", 18, "bold")).pack(side="left")
         ttk.Label(header, text="考研路上，每一步都算数",
                   foreground="#909090",
@@ -290,6 +290,6 @@ if __name__ == "__main__":
     if is_another_instance_running():
         import ctypes
         ctypes.windll.user32.MessageBoxW(
-            0, "专注规划器已在运行中", "FocusPlanner", 0x40)
+            0, "拾光已在运行中", "拾光", 0x40)
         sys.exit(0)
     FocusPlannerApp()

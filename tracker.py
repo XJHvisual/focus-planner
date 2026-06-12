@@ -118,8 +118,8 @@ class BuiltinTracker:
             process_name = re.sub(r'[-_](pc|x64|x86|win64.*|win32.*)$', '', process_name, flags=re.IGNORECASE)
             if process_name == "valorant-win64-shipping":
                 process_name = "valorant"
-            elif process_name == "pythonw" and "专注规划器" in title:
-                process_name = "专注规划器"
+            elif process_name == "pythonw" and "拾光" in title:
+                process_name = "拾光"
             elif process_name == "explorer":
                 process_name = "文件资源管理器"
             elif process_name == "qclaw":

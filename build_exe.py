@@ -18,7 +18,7 @@ def build():
         sys.executable, "-m", "PyInstaller",
         "--onefile",
         "--windowed",
-        "--name", "FocusPlanner",
+        "--name", "拾光",
         "--icon", icon_path,
         "--add-data", f"data{os.pathsep}data",
         "--add-data", f"focus_planner.ico{os.pathsep}.",
