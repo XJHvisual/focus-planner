@@ -13,23 +13,66 @@ from collections import defaultdict
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 import tempfile
 
-_LOCK_DIR = os.path.join(tempfile.gettempdir(), "FocusPlannerLock")
+_LOCK_FILE = os.path.join(tempfile.gettempdir(), "FocusPlanner.lock")
+
+
+def _pid_alive(pid):
+    """检测指定 PID 的进程是否存活（Windows）"""
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        SYNCHRONIZE = 0x00100000
+        h = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
+        if h == 0:
+            return False
+        # WaitForSingleObject(h, 0) → WAIT_TIMEOUT(0x102) 表示进程仍在运行
+        ret = kernel32.WaitForSingleObject(h, 0)
+        kernel32.CloseHandle(h)
+        return ret == 0x102
+    except Exception:
+        # 降级：os.kill(pid, 0) 在 Windows 上不可靠，但聊胜于无
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
 
 
 def is_another_instance_running():
-    """原子目录锁：Windows os.mkdir() 为原子操作，FileExistsError 表示已有实例"""
+    """PID 文件锁：锁文件存在且 PID 仍存活 → 已有实例；
+       进程已死或锁损坏 → 自动清理，返回 False"""
+    if os.path.exists(_LOCK_FILE):
+        try:
+            with open(_LOCK_FILE, "r") as f:
+                old_pid = int(f.read().strip())
+            if _pid_alive(old_pid):
+                return True
+            # 旧进程已死，清理残留锁
+            os.remove(_LOCK_FILE)
+        except (ValueError, OSError):
+            try:
+                os.remove(_LOCK_FILE)
+            except OSError:
+                pass
+    # 写入当前 PID
     try:
-        os.mkdir(_LOCK_DIR)
+        with open(_LOCK_FILE, "w") as f:
+            f.write(str(os.getpid()))
         return False
-    except FileExistsError:
-        return True
+    except OSError:
+        # 极端情况：无法写入锁文件，放行
+        return False
 
 
 def _cleanup_lock():
-    """退出时清理锁目录"""
+    """退出时清理自己的锁文件"""
     try:
-        os.rmdir(_LOCK_DIR)
-    except (OSError, FileNotFoundError):
+        if os.path.exists(_LOCK_FILE):
+            with open(_LOCK_FILE, "r") as f:
+                pid = int(f.read().strip())
+            if pid == os.getpid():
+                os.remove(_LOCK_FILE)
+    except (OSError, ValueError):
         pass
 
 atexit.register(_cleanup_lock)
@@ -789,13 +832,45 @@ class GoalTab(ttk.Frame):
         self.tree.column("id", width=0, stretch=False)
         self.tree.column("level", width=60, anchor="center")
 
-        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        self.tree_sb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=self._auto_scrollbar)
         self.tree.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
         self.tree.bind("<MouseWheel>", lambda e: self.tree.yview_scroll(int(-1 * e.delta / 120), "units"))
+        # 内容变化后检查是否需要滚动条
+        self.tree.bind("<<TreeviewSelect>>", lambda e: self.after_idle(self._update_sb_visibility))
+        self.after_idle(self._update_sb_visibility)
 
         self.refresh_goal_tree()
+
+    def _auto_scrollbar(self, first, last):
+        """中间函数：保持 Treeview 的 yscrollcommand 绑定，同时记录状态"""
+        self.tree_sb.set(first, last)
+        self.after_idle(self._update_sb_visibility)
+
+    def _update_sb_visibility(self):
+        """内容未超出可见区域时隐藏滚动条"""
+        try:
+            vbar = self.tree_sb
+            # 获取 Treeview 内部高度和内容高度
+            inner_h = self.tree.winfo_height()
+            # 获取最后一个 item 的底部位置
+            children = self.tree.get_children()
+            if not children:
+                vbar.pack_forget()
+                return
+            last_item = children[-1]
+            bbox = self.tree.bbox(last_item)
+            if bbox:
+                content_bottom = bbox[1] + bbox[3]
+                # 如果内容底部在可见区域内，隐藏滚动条
+                if content_bottom <= inner_h:
+                    vbar.pack_forget()
+                else:
+                    vbar.pack(side="right", fill="y")
+            else:
+                vbar.pack_forget()
+        except Exception:
+            vbar.pack_forget()
 
     def refresh_goal_tree(self):
         self.tree.delete(*self.tree.get_children())
@@ -818,6 +893,7 @@ class GoalTab(ttk.Frame):
         roots = [g for g in self.goals if g.get("parent") is None]
         for g in roots:
             insert_node(g)
+        self.after_idle(self._update_sb_visibility)
 
     def find_goal(self, goal_id):
         for g in self.goals:
@@ -2343,7 +2419,12 @@ class BuiltinTracker:
         "AppTimeTracker V2": "应用时间追踪器",
         "QClaw": "QClaw",
         "无畏契约": "valorant",
+        "Hermes": "Hermes",
     }
+    # 标题关键词映射（含deepseek/gemini等模型名 → Hermes）
+    _title_keywords = [
+        (["deepseek", "claude", "gemini", "gpt", "hermes"], "Hermes"),
+    ]
     IGNORE_APPS = {"nexus", "nexusportable", "rocketdock", "rainmeter", "wallpaperengine"}
 
     def _get_foreground(self):
@@ -2370,7 +2451,11 @@ class BuiltinTracker:
                     exe_buf = ctypes.create_unicode_buffer(260)
                     exe_len = wintypes.DWORD(260)
                     if kernel32.QueryFullProcessImageNameW(h_process, 0, exe_buf, ctypes.byref(exe_len)):
-                        process_name = os.path.basename(exe_buf.value).lower().replace('.exe', '')
+                        exe_path = exe_buf.value
+                        process_name = os.path.basename(exe_path).lower().replace('.exe', '')
+                        # 5E对战平台CS2：进程名是加密随机串，通过路径识别
+                        if re.search(r'(?i)[/\\]5e[/\\]|[/\\]5EClient[/\\]|[/\\]5eclient[/\\]', exe_path):
+                            process_name = 'cs2'
                     kernel32.CloseHandle(h_process)
 
             # 忽略规则
@@ -2390,15 +2475,23 @@ class BuiltinTracker:
             elif process_name == "qclaw":
                 process_name = "QClaw"
 
-            # 标题映射（unknown 进程按标题识别）
-            if process_name == "unknown" and title.strip():
+            # 标题映射（按标题关键词识别应用）
+            if title.strip():
+                # 精确匹配
                 matched = False
                 for key, app_name in self._title_map.items():
                     if key in title:
                         process_name = app_name
                         matched = True
                         break
-                if not matched and title.strip():
+                # 关键词模糊匹配
+                if not matched:
+                    for keywords, app_name in self._title_keywords:
+                        if any(kw.lower() in title.lower() for kw in keywords):
+                            process_name = app_name
+                            matched = True
+                            break
+                if not matched and process_name == "unknown":
                     # 用标题作为应用名（前20字符）
                     clean = title.strip()
                     process_name = clean[:20] if len(clean) <= 20 else clean[:18] + "…"
@@ -2661,7 +2754,19 @@ class ProgressTab(ttk.Frame):
         ttk.Entry(row1, textvariable=self.date_var, width=12).pack(side="left", padx=(0,15))
         ttk.Label(row1, text="体重(kg):", width=9).pack(side="left")
         self.weight_var = tk.StringVar()
-        ttk.Entry(row1, textvariable=self.weight_var, width=7).pack(side="left", padx=(0,15))
+        self.weight_entry = ttk.Entry(row1, textvariable=self.weight_var, width=7)
+        self.weight_entry.pack(side="left", padx=(0,5))
+        self.weight_var.trace_add("write", self._update_bmi_preview)
+
+        # 身高（可点击修改）
+        self.height_inline_btn = ttk.Label(row1, text="", font=("", 9), foreground="#555",
+            cursor="hand2")
+        self.height_inline_btn.pack(side="left", padx=(0, 5))
+        self.height_inline_btn.bind("<Button-1>", lambda e: self._set_height_inline())
+
+        # 实时BMI预览
+        self.bmi_label = ttk.Label(row1, text="BMI: —", foreground="#666", font=("", 9))
+        self.bmi_label.pack(side="left", padx=(0, 15))
         ttk.Button(row1, text="💾 保存记录", command=self.save_record).pack(side="left")
 
         # 中部：体重曲线 + 完成率（无框，用标题+色块区分）
@@ -2691,14 +2796,16 @@ class ProgressTab(ttk.Frame):
         # 下部：记录表
         bot = ttk.LabelFrame(self, text="📋 历史记录", padding=5)
         bot.pack(fill="both", expand=True, padx=10, pady=(0,5))
-        cols = ("date", "weight", "training_done", "training_total")
+        cols = ("date", "weight", "bmi", "training_done", "training_total")
         self.rec_tree = ttk.Treeview(bot, columns=cols, show="headings", height=6)
         self.rec_tree.heading("date", text="日期")
         self.rec_tree.heading("weight", text="体重(kg)")
+        self.rec_tree.heading("bmi", text="BMI")
         self.rec_tree.heading("training_done", text="完成训练")
         self.rec_tree.heading("training_total", text="总训练")
         self.rec_tree.column("date", width=100)
         self.rec_tree.column("weight", width=80)
+        self.rec_tree.column("bmi", width=65)
         self.rec_tree.column("training_done", width=80)
         self.rec_tree.column("training_total", width=80)
         rec_sb = ttk.Scrollbar(bot, orient="vertical", command=self.rec_tree.yview)
@@ -2706,6 +2813,10 @@ class ProgressTab(ttk.Frame):
         self.rec_tree.pack(side="left", fill="both", expand=True)
         rec_sb.pack(side="right", fill="y")
         self.rec_tree.bind("<MouseWheel>", lambda e: self.rec_tree.yview_scroll(int(-1 * e.delta / 120), "units"))
+
+        # 初始化时刷新身高/BMI显示
+        self.after(200, self._update_bmi_preview)
+        self.after(300, self.refresh_progress)
 
     def _load_log(self):
         d = DataManager.load(TRAINING_LOG_FILE, default={})
@@ -2732,8 +2843,8 @@ class ProgressTab(ttk.Frame):
                 return
         log[ds] = entry
         self._save_log(log)
-        self.weight_var.set("")
         self.refresh_progress()
+        self.weight_var.set("")
         messagebox.showinfo("成功", f"{ds} 数据已保存")
 
     def refresh_progress(self):
@@ -2751,17 +2862,23 @@ class ProgressTab(ttk.Frame):
 
         # 刷新表格
         self.rec_tree.delete(*self.rec_tree.get_children())
+        height_cm = self._load_settings().get("height_cm")
         for ds in dates:
             entry = log.get(ds, {})
+            w = entry.get("weight")
+            bmi_str = self._calc_bmi_str(w, height_cm) if w else "—"
             self.rec_tree.insert("", "end", values=(
                 ds,
-                f"{entry.get('weight', '-')}" if entry.get('weight') else "-",
+                f"{w}" if w else "—",
+                bmi_str,
                 entry.get("training_done", 0),
                 entry.get("training_total", 0)
             ))
 
         self.draw_weight_chart()
         self.draw_rate_chart()
+        # 刷新完成后更新BMI预览
+        self._update_bmi_preview()
 
     def draw_weight_chart(self):
         c = self.weight_canvas
@@ -2815,6 +2932,8 @@ class ProgressTab(ttk.Frame):
             x = PAD_L + cw * i / max(n - 1, 1)
             y = PAD_T + ch * (1 - (w - w_min) / (w_max - w_min))
             c.create_oval(x-4, y-4, x+4, y+4, fill="#1976D2", outline="white", width=2)
+            # 数据点上方显示具体体重
+            c.create_text(x, y - 12, text=f"{w:.1f}", fill="#1976D2", font=("", 8, "bold"))
             # X标签（间隔显示）
             if n <= 10 or i % max(1, n // 7) == 0:
                 label = ds[5:]  # MM-DD
@@ -2883,6 +3002,101 @@ class ProgressTab(ttk.Frame):
             # X标签
             label = mon_s[5:]  # MM-DD
             c.create_text(x, H - PAD_B + 12, text=label, fill="#888", font=("", 7))
+
+    # ── BMI 辅助方法 ──
+    def _calc_bmi_str(self, weight_kg, height_cm):
+        if not weight_kg or not height_cm:
+            return "—"
+        h_m = height_cm / 100.0
+        bmi = weight_kg / (h_m * h_m)
+        return f"{bmi:.1f}"
+
+    def _update_bmi_preview(self, *_):
+        """刷新身高内联显示和BMI预览"""
+        # 刷新身高显示
+        settings = self.app._load_settings()
+        height_cm = settings.get("height_cm")
+        if height_cm:
+            self.height_inline_btn.config(text=f"📏{int(height_cm)}cm")
+        else:
+            self.height_inline_btn.config(text="📏未设", foreground="#999")
+
+        # 刷新BMI预览
+        w_str = self.weight_var.get().strip()
+        if w_str and height_cm:
+            try:
+                w = float(w_str)
+                bmi_str = self._calc_bmi_str(w, height_cm)
+                bmi_val = float(bmi_str)
+                if bmi_val < 18.5:
+                    color = "#FF9800"
+                elif bmi_val < 24:
+                    color = "#4CAF50"
+                elif bmi_val < 28:
+                    color = "#FF9800"
+                else:
+                    color = "#F44336"
+                self.bmi_label.config(text=f"BMI: {bmi_str}", foreground=color)
+            except ValueError:
+                self.bmi_label.config(text="BMI: —", foreground="#666")
+        else:
+            self.bmi_label.config(text="BMI: —", foreground="#666")
+
+    def _set_height_inline(self):
+        """在ProgressTab内弹出身高设置（复用app的对话框但刷新本tab）"""
+        dlg = tk.Toplevel(self)
+        dlg.title("设置身高")
+        dlg.geometry("300x150")
+        dlg.resizable(False, False)
+        dlg.transient(self)
+        dlg.grab_set()
+
+        ttk.Label(dlg, text="请输入身高（厘米）：",
+                  font=("Microsoft YaHei", 11, "bold")).pack(pady=(20, 10))
+
+        current = self.app._load_settings().get("height_cm", "")
+        var = tk.StringVar(value=str(int(current)) if current else "")
+
+        f = ttk.Frame(dlg)
+        f.pack()
+        entry = ttk.Entry(f, textvariable=var, width=8,
+                          font=("Microsoft YaHei", 12), justify="center")
+        entry.pack(side="left")
+        ttk.Label(f, text="cm", font=("Microsoft YaHei", 10)).pack(side="left", padx=(5, 0))
+
+        def save():
+            v = var.get().strip()
+            if v:
+                try:
+                    val = float(v)
+                    if val < 50 or val > 250:
+                        messagebox.showerror("错误", "身高应在 50~250cm 之间", parent=dlg)
+                        return
+                except ValueError:
+                    messagebox.showerror("错误", "请输入有效的数字", parent=dlg)
+                    return
+            data = self.app._load_settings()
+            data["height_cm"] = float(v) if v else None
+            self.app._save_settings(data)
+            dlg.destroy()
+            self._update_bmi_preview()
+            self.app._update_height_display()
+            self.refresh_progress()
+
+        def clear():
+            data = self.app._load_settings()
+            data["height_cm"] = None
+            self.app._save_settings(data)
+            dlg.destroy()
+            self._update_bmi_preview()
+            self.app._update_height_display()
+            self.refresh_progress()
+
+        btn_f = ttk.Frame(dlg)
+        btn_f.pack(pady=(12, 0))
+        ttk.Button(btn_f, text="✓ 确定", command=save, width=10).pack(side="left", padx=5)
+        ttk.Button(btn_f, text="✗ 取消", command=dlg.destroy, width=10).pack(side="left", padx=5)
+        ttk.Button(btn_f, text="清除", command=clear, width=10).pack(side="left", padx=5)
 
 
 class FocusPlannerApp:
@@ -3118,6 +3332,12 @@ class FocusPlannerApp:
         ttk.Button(btn_frame, text="✗ 取消", command=dlg.destroy, width=10).pack(side="left", padx=5)
         ttk.Button(btn_frame, text="清除", command=clear, width=10).pack(side="left", padx=5)
 
+    def _refresh_bmi_all(self):
+        """刷新所有BMI"""
+        if hasattr(self, 'progress_tab'):
+            self.progress_tab._update_bmi_preview()
+            self.progress_tab.refresh_progress()
+
     # ── 实时时钟 ──
     def _tick_clock(self):
         now = datetime.now()
@@ -3151,6 +3371,8 @@ class FocusPlannerApp:
 
 if __name__ == "__main__":
     if is_another_instance_running():
-        _cleanup_lock()
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(
+            0, "专注规划器已在运行中", "FocusPlanner", 0x40)
         sys.exit(0)
     FocusPlannerApp()
