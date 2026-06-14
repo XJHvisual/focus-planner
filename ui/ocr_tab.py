@@ -10,6 +10,22 @@ OBSIDIAN_PCO = r'D:\12081\Documents\PCO'
 
 from ocr import format_as_markdown, save_to_obsidian, clean_text
 
+# ── 引擎可用性检测 ──
+def _check_tesseract():
+    return os.path.exists(TESSERACT) and os.path.isdir(TESSDATA)
+
+def _check_easyocr():
+    try:
+        import easyocr; return True
+    except ImportError:
+        return False
+
+def _check_paddle():
+    try:
+        from paddleocr import PaddleOCR; return True
+    except ImportError:
+        return False
+
 class OcrTab(ttk.Frame):
     def __init__(self, parent, app):
         super().__init__(parent)
@@ -17,16 +33,27 @@ class OcrTab(ttk.Frame):
         self.image_path = None
         self._preview_img = None
 
+        # 检测可用引擎
+        self.engines = []
+        if _check_tesseract():
+            self.engines.append(("tesseract", "Tesseract"))
+        if _check_easyocr():
+            self.engines.append(("easyocr", "EasyOCR"))
+        if _check_paddle():
+            self.engines.append(("paddle", "PaddleOCR"))
+        if not self.engines:
+            self.engines = [("none", "无可用引擎")]
+
         # 顶部
         top = ttk.Frame(self)
         top.pack(fill="x", padx=10, pady=(10, 3))
         ttk.Label(top, text="🔍 OCR 文字识别", font=("", 13, "bold")).pack(side="left")
 
-        # 引擎选择
+        # 引擎选择（只显示可用引擎）
         engine_frame = ttk.Frame(top)
         engine_frame.pack(side="right")
-        self.engine_var = tk.StringVar(value="tesseract")
-        for val, label in [("tesseract", "快"), ("easyocr", "准"), ("paddle", "表")]:
+        self.engine_var = tk.StringVar(value=self.engines[0][0])
+        for val, label in self.engines:
             ttk.Radiobutton(engine_frame, text=label, variable=self.engine_var,
                             value=val).pack(side="right", padx=(3, 0))
 
@@ -40,14 +67,16 @@ class OcrTab(ttk.Frame):
         self.canvas = tk.Canvas(preview_frame, bg="#F5F5F5", highlightthickness=1,
                                  highlightbackground="#DDD")
         self.canvas.pack(fill="both", expand=True)
-        self.canvas.create_text(300, 100, text="点击下方按钮选择图片",
+        self.canvas.create_text(300, 100, text="点击按钮选择图片或从剪贴板粘贴",
                                  fill="#999", font=("", 11), tags="placeholder")
 
         # 按钮栏
         btn_bar = ttk.Frame(self)
         btn_bar.pack(fill="x", padx=10, pady=5)
-        self.select_btn = ttk.Button(btn_bar, text="📁 选择图片", command=self.select_image)
-        self.select_btn.pack(side="left", padx=(0, 8))
+        self.select_btn = ttk.Button(btn_bar, text="📁 选择", command=self.select_image)
+        self.select_btn.pack(side="left", padx=(0, 4))
+        self.paste_btn = ttk.Button(btn_bar, text="📋 粘贴", command=self.paste_image)
+        self.paste_btn.pack(side="left", padx=(0, 8))
         self.ocr_btn = ttk.Button(btn_bar, text="🔍 开始识别", command=self.start_ocr,
                                    state="disabled")
         self.ocr_btn.pack(side="left", padx=(0, 8))
@@ -72,15 +101,32 @@ class OcrTab(ttk.Frame):
         ttk.Button(bottom, text="💾 存到 Obsidian", command=self.save_to_obsidian_dialog).pack(side="right")
         ttk.Button(bottom, text="📝 重新格式化", command=self.reformat).pack(side="right", padx=5)
 
+    def _set_image(self, img_path):
+        self.image_path = img_path
+        self.show_preview(img_path)
+        self.ocr_btn.config(state="normal")
+
     def select_image(self):
         path = filedialog.askopenfilename(
             title="选择图片",
             filetypes=[("图片文件", "*.jpg *.jpeg *.png *.bmp *.gif"), ("所有文件", "*.*")]
         )
         if path:
-            self.image_path = path
-            self.show_preview(path)
-            self.ocr_btn.config(state="normal")
+            self._set_image(path)
+
+    def paste_image(self):
+        try:
+            from PIL import ImageGrab
+            img = ImageGrab.grabclipboard()
+            if img is None:
+                messagebox.showinfo("提示", "剪贴板中没有图片")
+                return
+            # 保存到临时文件
+            tmp = os.path.join(os.environ.get('TEMP', '.'), f'ocr_clipboard_{int(time.time())}.png')
+            img.save(tmp)
+            self._set_image(tmp)
+        except Exception as e:
+            messagebox.showerror("错误", f"粘贴失败：{e}")
 
     def show_preview(self, path):
         try:
@@ -126,10 +172,9 @@ class OcrTab(ttk.Frame):
             elif engine == "paddle":
                 result = self._ocr_paddle(self.image_path)
             else:
-                result = "未知引擎"
+                result = "无可用引擎，请安装 Tesseract/EasyOCR/PaddleOCR"
 
-            # Markdown 格式化
-            if self.md_var.get() and result:
+            if self.md_var.get() and result and engine != "none":
                 result = format_as_markdown(result)
 
         except Exception as e:
