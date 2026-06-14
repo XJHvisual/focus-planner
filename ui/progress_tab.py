@@ -131,7 +131,7 @@ class ProgressTab(ttk.Frame):
 
         # 刷新表格
         self.rec_tree.delete(*self.rec_tree.get_children())
-        height_cm = self._load_settings().get("height_cm")
+        height_cm = self.app._load_settings().get("height_cm")
         for ds in dates:
             entry = log.get(ds, {})
             w = entry.get("weight")

@@ -15,8 +15,9 @@ from ui.timer_stats_tab import TimerStatsTab
 from ui.week_tab import WeekTab
 from ui.time_track_tab import TimeTrackTab
 from ui.progress_tab import ProgressTab
+from ui.ocr_tab import OcrTab
 
-class FocusPlannerApp:
+class ShiGuangApp:
     def __init__(self):
 
         self.root = tk.Tk()
@@ -85,6 +86,7 @@ class FocusPlannerApp:
         self.timer_stats_tab = TimerStatsTab(self.content, self)
         self.progress_tab = ProgressTab(self.content, self)
         self.timetrack_tab = TimeTrackTab(self.content, self)
+        self.ocr_tab = OcrTab(self.content, self)
 
         # 启动内置追踪器
         self.tracker = BuiltinTracker()
@@ -100,6 +102,7 @@ class FocusPlannerApp:
             ("⏱📊 专注·统计", self.timer_stats_tab, "timer"),
             ("📈  训练进度", self.progress_tab, "progress"),
             ("📊  时间追踪", self.timetrack_tab, "timetrack"),
+            ("🔍  文字识别", self.ocr_tab, "ocr"),
         ]
         for i, (label, tab, key) in enumerate(nav_items):
             btn = tk.Button(sidebar, text=label, font=SIDEBAR_FONT,
@@ -125,7 +128,7 @@ class FocusPlannerApp:
         # 隐藏所有
         for tab in (self.goal_tab, self.task_tab, self.week_tab,
                      self.timer_stats_tab, self.progress_tab,
-                     self.timetrack_tab):
+                     self.timetrack_tab, self.ocr_tab):
             tab.pack_forget()
         # 重置所有按钮样式
         for k, btn in self.nav_btns.items():
@@ -140,6 +143,7 @@ class FocusPlannerApp:
             "timer": self.timer_stats_tab,
             "progress": self.progress_tab,
             "timetrack": self.timetrack_tab,
+            "ocr": self.ocr_tab,
         }
         tab_map[key].pack(fill="both", expand=True)
         # 刷新需要实时数据的 Tab
@@ -292,4 +296,4 @@ if __name__ == "__main__":
         ctypes.windll.user32.MessageBoxW(
             0, "拾光已在运行中", "拾光", 0x40)
         sys.exit(0)
-    FocusPlannerApp()
+    ShiGuangApp()

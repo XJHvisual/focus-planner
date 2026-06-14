@@ -3,8 +3,8 @@
   "process_name_mapping": {
     "valorant-win64-shipping": "valorant",
     "pythonw": {
-      "title_contains": "专注规划器",
-      "map_to": "专注规划器"
+      "title_contains": "拾光",
+      "map_to": "拾光"
     },
     "explorer": "文件资源管理器",
     "qclaw": "QClaw",

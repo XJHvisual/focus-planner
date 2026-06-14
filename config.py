@@ -13,7 +13,7 @@ from collections import defaultdict
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 import tempfile
 
-_LOCK_FILE = os.path.join(tempfile.gettempdir(), "FocusPlanner.lock")
+_LOCK_FILE = os.path.join(tempfile.gettempdir(), "拾光.lock")
 
 
 def _pid_alive(pid):
@@ -83,6 +83,7 @@ RECORDS_FILE = os.path.join(DATA_DIR, "records.json")
 FOCUS_FILE = os.path.join(DATA_DIR, "focus_log.json")
 TRAINING_LOG_FILE = os.path.join(DATA_DIR, "training_log.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
+COURSES_FILE = os.path.join(DATA_DIR, "courses.json")
 TRACKER_DB = os.path.join(DATA_DIR, "tracker_v2.db")
 
 # ============ 健身训练详情数据 ============

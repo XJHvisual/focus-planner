@@ -1,0 +1,105 @@
+{
+  "_comment": "课程表 - 按周循环显示。day: 0=周一~6=周日。weeks: all/odd/even",
+  "courses": [
+    {
+      "id": "course_1",
+      "name": "计算机组成原理",
+      "day": 1,
+      "start": "08:20",
+      "end": "09:55",
+      "teacher": "王真",
+      "weeks": "all",
+      "color": "#4285F4"
+    },
+    {
+      "id": "course_2",
+      "name": "信息论与编码",
+      "day": 2,
+      "start": "08:20",
+      "end": "09:55",
+      "teacher": "陈思远",
+      "weeks": "all",
+      "color": "#34A853"
+    },
+    {
+      "id": "course_3",
+      "name": "计算机网络与安全",
+      "day": 0,
+      "start": "10:00",
+      "end": "11:45",
+      "teacher": "周林",
+      "weeks": "all",
+      "color": "#EA4335"
+    },
+    {
+      "id": "course_4",
+      "name": "计算机网络与安全",
+      "day": 2,
+      "start": "10:00",
+      "end": "11:45",
+      "teacher": "周林",
+      "weeks": "all",
+      "color": "#EA4335"
+    },
+    {
+      "id": "course_5",
+      "name": "计算机组成原理",
+      "day": 3,
+      "start": "10:00",
+      "end": "11:45",
+      "teacher": "王真",
+      "weeks": "all",
+      "color": "#4285F4"
+    },
+    {
+      "id": "course_6",
+      "name": "LINUX操作系统与安全",
+      "day": 4,
+      "start": "10:00",
+      "end": "11:45",
+      "teacher": "刘辉",
+      "weeks": "all",
+      "color": "#FBBC04"
+    },
+    {
+      "id": "course_7",
+      "name": "LINUX操作系统与安全",
+      "day": 4,
+      "start": "11:50",
+      "end": "12:30",
+      "teacher": "刘辉",
+      "weeks": "all",
+      "color": "#FBBC04"
+    },
+    {
+      "id": "course_8",
+      "name": "操作系统原理",
+      "day": 0,
+      "start": "13:20",
+      "end": "14:55",
+      "teacher": "",
+      "weeks": "all",
+      "color": "#A855F7"
+    },
+    {
+      "id": "course_9",
+      "name": "信息安全法律法规",
+      "day": 2,
+      "start": "13:20",
+      "end": "14:55",
+      "teacher": "魏为民",
+      "weeks": "odd",
+      "color": "#00897B"
+    },
+    {
+      "id": "course_10",
+      "name": "操作系统原理",
+      "day": 2,
+      "start": "13:20",
+      "end": "14:55",
+      "teacher": "李玮玮",
+      "weeks": "even",
+      "color": "#A855F7"
+    }
+  ]
+}
