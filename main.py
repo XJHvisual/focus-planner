@@ -28,6 +28,9 @@ C_SIDEBAR  = "#EBE5D9"
 C_RED      = "#C44536"
 C_AMBER    = "#D4843A"
 C_TOOLBAR  = "#F0EDE5"
+C_TASK_BG  = "#F5F0E8"   # 任务区：暖奶油
+C_STUDY_BG = "#EEF2ED"   # 学习区：淡青灰
+C_HEALTH_BG = "#F6F0EC"  # 健康区：暖粉灰
 FONT       = "Microsoft YaHei"
 
 
@@ -106,12 +109,15 @@ class ShiGuangApp:
         pw.pack(fill="both", expand=True)
 
         # ═══ 上区：今日任务（全宽）═══
-        top = tk.Frame(pw, bg=C_PAGE)
+        top = tk.Frame(pw, bg=C_TASK_BG)
         pw.add(top, minsize=180, stretch="always")
 
-        tk.Label(top, text="今日任务", font=(FONT, 11, "bold"),
-                 fg=C_TEXT, bg=C_PAGE).pack(anchor="w", padx=14, pady=(6, 0))
-        tk.Frame(top, bg=C_ACCENT, height=1).pack(fill="x", padx=14)
+        # 区域标题 + 左侧色条
+        hdr = tk.Frame(top, bg=C_TASK_BG)
+        hdr.pack(fill="x", padx=10, pady=(6, 0))
+        tk.Frame(hdr, bg=C_AMBER, width=3).pack(side="left", fill="y", padx=(0, 6))
+        tk.Label(hdr, text="今日任务", font=(FONT, 11, "bold"),
+                 fg=C_TEXT, bg=C_TASK_BG).pack(side="left")
 
         self.task_tab = TaskTab(top, self)
         self.task_tab.pack(fill="both", expand=True, padx=8, pady=4)
@@ -121,8 +127,17 @@ class ShiGuangApp:
         pw.add(bottom, minsize=300, stretch="always")
 
         # 左侧 Notebook：学习看板
-        nb_learn = ttk.Notebook(bottom)
-        nb_learn.pack(side="left", fill="both", expand=True, padx=(4, 2), pady=4)
+        study_frame = tk.Frame(bottom, bg=C_STUDY_BG)
+        study_frame.pack(side="left", fill="both", expand=True, padx=(4, 2), pady=4)
+
+        shdr = tk.Frame(study_frame, bg=C_STUDY_BG)
+        shdr.pack(fill="x", padx=8, pady=(4, 0))
+        tk.Frame(shdr, bg=C_ACCENT, width=3).pack(side="left", fill="y", padx=(0, 6))
+        tk.Label(shdr, text="学习看板", font=(FONT, 10, "bold"),
+                 fg=C_TEXT, bg=C_STUDY_BG).pack(side="left")
+
+        nb_learn = ttk.Notebook(study_frame)
+        nb_learn.pack(fill="both", expand=True, padx=4, pady=(2, 4))
 
         self.week_tab = WeekTab(nb_learn, self)
         nb_learn.add(self.week_tab, text="  📅 周计划表  ")
@@ -131,8 +146,17 @@ class ShiGuangApp:
         nb_learn.bind("<<NotebookTabChanged>>", self._on_learn_tab_changed)
 
         # 右侧 Notebook：健康数据
-        nb_health = ttk.Notebook(bottom)
-        nb_health.pack(side="right", fill="both", expand=True, padx=(2, 4), pady=4)
+        health_frame = tk.Frame(bottom, bg=C_HEALTH_BG)
+        health_frame.pack(side="right", fill="both", expand=True, padx=(2, 4), pady=4)
+
+        hhdr = tk.Frame(health_frame, bg=C_HEALTH_BG)
+        hhdr.pack(fill="x", padx=8, pady=(4, 0))
+        tk.Frame(hhdr, bg=C_RED, width=3).pack(side="left", fill="y", padx=(0, 6))
+        tk.Label(hhdr, text="健康数据", font=(FONT, 10, "bold"),
+                 fg=C_TEXT, bg=C_HEALTH_BG).pack(side="left")
+
+        nb_health = ttk.Notebook(health_frame)
+        nb_health.pack(fill="both", expand=True, padx=4, pady=(2, 4))
 
         self.progress_tab = ProgressTab(nb_health, self)
         nb_health.add(self.progress_tab, text="  📈 训练进度  ")
