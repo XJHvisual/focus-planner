@@ -16,21 +16,21 @@ from ui.time_track_tab import TimeTrackTab
 from ui.progress_tab import ProgressTab
 from ui.ocr_tab import OcrTab
 
-# ── 暖调学术配色 ──
-C_PAGE     = "#F8F6F2"
-C_HEADER   = "#3D3830"
-C_ACCENT   = "#0D7377"
-C_ACCENT_L = "#D4EDDA"
-C_TEXT     = "#4A4238"
-C_SUBTLE   = "#8B8178"
-C_INPUT_BG = "#F2EEE6"
-C_SIDEBAR  = "#EBE5D9"
-C_RED      = "#C44536"
-C_AMBER    = "#D4843A"
-C_TOOLBAR  = "#F0EDE5"
-C_TASK_BG  = "#F5F0E8"   # 任务区：暖奶油
-C_STUDY_BG = "#EEF2ED"   # 学习区：淡青灰
-C_HEALTH_BG = "#F6F0EC"  # 健康区：暖粉灰
+# ── UI/UX Pro Max 配色：Flat Design · 薄荷清新 ──
+C_PAGE     = "#F0FDFA"   # 页底：薄荷白
+C_HEADER   = "#0D9488"   # 顶栏：青绿
+C_ACCENT   = "#0D9488"   # 强调：青绿
+C_ACCENT_L = "#CCFBF1"   # 强调淡色
+C_TEXT     = "#134E4A"   # 正文：深青绿
+C_SUBTLE   = "#5E8B87"   # 辅助文字
+C_INPUT_BG = "#E6F5F2"   # 输入框底色
+C_SIDEBAR  = "#E0F2EF"   # 侧栏
+C_RED      = "#EF4444"   # 警示红
+C_AMBER    = "#F97316"   # 暖橙强调
+C_TOOLBAR  = "#E6F5F2"   # 工具栏
+C_TASK_BG  = "#F4FAF8"   # 任务区
+C_STUDY_BG = "#ECF7F5"   # 学习区
+C_HEALTH_BG= "#FEF8F4"   # 健康区（暖橙底）
 FONT       = "Microsoft YaHei"
 
 
@@ -59,7 +59,7 @@ class ShiGuangApp:
         banner.pack_propagate(False)
 
         tk.Label(banner, text="拾 光", font=(FONT, 16, "bold"),
-                 fg="#D4C8B8", bg=C_HEADER).pack(side="left", padx=18, pady=5)
+                 fg="#FFFFFF", bg=C_HEADER).pack(side="left", padx=18, pady=5)
 
         right_area = tk.Frame(banner, bg=C_HEADER)
         right_area.pack(side="right", padx=14)
@@ -79,8 +79,8 @@ class ShiGuangApp:
         self._tick_clock()
 
         tk.Button(right_area, text="考试日", font=(FONT, 8),
-                  bg="#4D4840", fg=C_SUBTLE, bd=0, padx=8, pady=1,
-                  activebackground="#5D5850", activeforeground="#C8BFAF",
+                  bg="#0B7A70", fg="#CCFBF1", bd=0, padx=8, pady=1,
+                  activebackground="#0F9688", activeforeground="#FFFFFF",
                   cursor="hand2", command=self._set_exam_date).pack(side="left")
 
         tk.Frame(self.root, bg=C_ACCENT, height=2).pack(fill="x")
