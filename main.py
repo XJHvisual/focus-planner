@@ -18,12 +18,13 @@ from ui.ocr_tab import OcrTab
 
 # ── 暖调学术配色 ──
 C_PAGE     = "#F8F6F2"
-C_SIDEBAR  = "#EBE5D9"
 C_HEADER   = "#3D3830"
 C_ACCENT   = "#0D7377"
+C_ACCENT_L = "#D4EDDA"
 C_TEXT     = "#4A4238"
 C_SUBTLE   = "#8B8178"
 C_INPUT_BG = "#F2EEE6"
+C_SIDEBAR  = "#EBE5D9"
 C_RED      = "#C44536"
 C_AMBER    = "#D4843A"
 C_TOOLBAR  = "#F0EDE5"
@@ -34,21 +35,15 @@ class ShiGuangApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("拾光 v3.3")
-        self.root.geometry("1050x680")
-        self.root.minsize(900, 560)
+        self.root.geometry("1050x750")
+        self.root.minsize(900, 620)
         self.root.configure(background=C_PAGE)
         self._setup_style()
 
-        # ═══ Banner ═══
         self._build_banner()
-
-        # ═══ 工具栏 ═══
         self._build_toolbar()
-
-        # ═══ 三区主体 ═══
         self._build_main_layout()
 
-        # ═══ 启动 ═══
         self.tracker = BuiltinTracker()
         self.tracker.start()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -56,12 +51,12 @@ class ShiGuangApp:
 
     # ── Banner ──
     def _build_banner(self):
-        banner = tk.Frame(self.root, bg=C_HEADER, height=46)
+        banner = tk.Frame(self.root, bg=C_HEADER, height=44)
         banner.pack(fill="x")
         banner.pack_propagate(False)
 
         tk.Label(banner, text="拾 光", font=(FONT, 16, "bold"),
-                 fg="#D4C8B8", bg=C_HEADER).pack(side="left", padx=18, pady=6)
+                 fg="#D4C8B8", bg=C_HEADER).pack(side="left", padx=18, pady=5)
 
         right_area = tk.Frame(banner, bg=C_HEADER)
         right_area.pack(side="right", padx=14)
@@ -85,12 +80,11 @@ class ShiGuangApp:
                   activebackground="#5D5850", activeforeground="#C8BFAF",
                   cursor="hand2", command=self._set_exam_date).pack(side="left")
 
-        # 底边强调线
         tk.Frame(self.root, bg=C_ACCENT, height=2).pack(fill="x")
 
     # ── 工具栏 ──
     def _build_toolbar(self):
-        bar = tk.Frame(self.root, bg=C_TOOLBAR, height=32)
+        bar = tk.Frame(self.root, bg=C_TOOLBAR, height=30)
         bar.pack(fill="x")
         bar.pack_propagate(False)
 
@@ -102,36 +96,33 @@ class ShiGuangApp:
             btn = tk.Button(bar, text=text, font=(FONT, 9),
                            bg=C_TOOLBAR, fg=C_TEXT, bd=0,
                            activebackground=C_PAGE, activeforeground=C_ACCENT,
-                           padx=12, pady=2, cursor="hand2", command=cmd)
+                           padx=12, pady=1, cursor="hand2", command=cmd)
             btn.pack(side="left", padx=(8, 0))
 
-        # 右侧：区标题
-        tk.Label(bar, text="学习看板", font=(FONT, 9),
-                 fg=C_SUBTLE, bg=C_TOOLBAR).pack(side="right", padx=14)
-
-    # ── 三区主体 ──
+    # ── 主体：上下分区 ──
     def _build_main_layout(self):
-        # PanedWindow: 左(任务) | 右(上下)
-        pw = tk.PanedWindow(self.root, orient="horizontal",
+        pw = tk.PanedWindow(self.root, orient="vertical",
                            bg=C_PAGE, sashwidth=3, sashrelief="flat")
         pw.pack(fill="both", expand=True)
 
-        # ─── 左区：今日任务 ───
-        left = tk.Frame(pw, bg=C_SIDEBAR, width=370)
-        pw.add(left, minsize=320, stretch="never")
+        # ═══ 上区：今日任务（全宽）═══
+        top = tk.Frame(pw, bg=C_PAGE)
+        pw.add(top, minsize=180, stretch="always")
 
-        tk.Label(left, text="今日任务", font=(FONT, 11, "bold"),
-                 fg=C_TEXT, bg=C_SIDEBAR).pack(anchor="w", padx=14, pady=(8, 4))
+        tk.Label(top, text="今日任务", font=(FONT, 11, "bold"),
+                 fg=C_TEXT, bg=C_PAGE).pack(anchor="w", padx=14, pady=(6, 0))
+        tk.Frame(top, bg=C_ACCENT, height=1).pack(fill="x", padx=14)
 
-        self.task_tab = TaskTab(left, self)
-        self.task_tab.pack(fill="both", expand=True, padx=6, pady=4)
+        self.task_tab = TaskTab(top, self)
+        self.task_tab.pack(fill="both", expand=True, padx=8, pady=4)
 
-        # ─── 右区：上下 Notebook ───
-        right = tk.Frame(pw, bg=C_PAGE)
-        pw.add(right, minsize=480)
+        # ═══ 下区：学习 | 健康（左右 Notebook）═══
+        bottom = tk.Frame(pw, bg=C_PAGE)
+        pw.add(bottom, minsize=300, stretch="always")
 
-        nb_learn = ttk.Notebook(right)
-        nb_learn.pack(fill="both", expand=True, pady=(0, 2))
+        # 左侧 Notebook：学习看板
+        nb_learn = ttk.Notebook(bottom)
+        nb_learn.pack(side="left", fill="both", expand=True, padx=(4, 2), pady=4)
 
         self.week_tab = WeekTab(nb_learn, self)
         nb_learn.add(self.week_tab, text="  📅 周计划表  ")
@@ -139,8 +130,9 @@ class ShiGuangApp:
         nb_learn.add(self.timer_stats_tab, text="  ⏱ 专注统计  ")
         nb_learn.bind("<<NotebookTabChanged>>", self._on_learn_tab_changed)
 
-        nb_health = ttk.Notebook(right)
-        nb_health.pack(fill="both", expand=True, pady=(2, 0))
+        # 右侧 Notebook：健康数据
+        nb_health = ttk.Notebook(bottom)
+        nb_health.pack(side="right", fill="both", expand=True, padx=(2, 4), pady=4)
 
         self.progress_tab = ProgressTab(nb_health, self)
         nb_health.add(self.progress_tab, text="  📈 训练进度  ")
@@ -151,15 +143,15 @@ class ShiGuangApp:
     def _on_learn_tab_changed(self, ev):
         nb = ev.widget
         cur = nb.tab(nb.select(), "text").strip()
-        if cur == "专注统计":
+        if "专注" in cur:
             self.timer_stats_tab.refresh_stats()
 
     def _on_health_tab_changed(self, ev):
         nb = ev.widget
         cur = nb.tab(nb.select(), "text").strip()
-        if cur == "时间追踪":
+        if "追踪" in cur:
             self.timetrack_tab.refresh()
-        elif cur == "训练进度":
+        elif "训练" in cur:
             self.progress_tab.refresh_progress()
 
     # ── 工具弹窗 ──
@@ -172,8 +164,8 @@ class ShiGuangApp:
         dlg.geometry("700x500")
         dlg.transient(self.root)
         dlg.configure(bg=C_PAGE)
-        ocr = OcrTab(dlg, self)
-        ocr.pack(fill="both", expand=True)
+        otr = OcrTab(dlg, self)
+        otr.pack(fill="both", expand=True)
 
     # ── 全局样式 ──
     def _setup_style(self):
@@ -195,7 +187,6 @@ class ShiGuangApp:
         style.map("TCombobox", fieldbackground=[("focus", "#FFFFFF")])
         style.configure("Treeview", font=(FONT, 10), rowheight=28)
         style.configure("Treeview.Heading", font=(FONT, 10, "bold"))
-        # Notebook 标签样式
         style.configure("TNotebook", background=C_PAGE, borderwidth=0)
         style.configure("TNotebook.Tab", font=(FONT, 10), padding=(14, 5))
         style.map("TNotebook.Tab",
