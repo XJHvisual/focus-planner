@@ -15,21 +15,25 @@ class TaskTab(ttk.Frame):
 
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", pady=(0, 5))
-        ttk.Button(toolbar, text="➕ 添加任务", command=self.add_task).pack(side="left")
-        ttk.Button(toolbar, text="🗑 删除", command=self.delete_task).pack(side="left")
-        ttk.Button(toolbar, text="🔄 清除已完成", command=self.clear_done).pack(side="left")
-        ttk.Separator(toolbar, orient="vertical").pack(side="left", fill="y", padx=8)
-        ttk.Button(toolbar, text="⏰ 空闲时间", command=self.set_free_time).pack(side="left")
-        ttk.Button(toolbar, text="📅 智能排程", command=self.auto_schedule).pack(side="left")
 
+        # 第一行：操作按钮
+        row1 = ttk.Frame(toolbar)
+        row1.pack(fill="x")
+        ttk.Button(row1, text="➕ 添加", command=self.add_task).pack(side="left")
+        ttk.Button(row1, text="🗑 删除", command=self.delete_task).pack(side="left", padx=(2, 0))
+        ttk.Button(row1, text="🔄 清除", command=self.clear_done).pack(side="left", padx=(2, 0))
+        ttk.Separator(row1, orient="vertical").pack(side="left", fill="y", padx=6)
+        ttk.Button(row1, text="⏰ 空闲", command=self.set_free_time).pack(side="left")
+        ttk.Button(row1, text="📅 排程", command=self.auto_schedule).pack(side="left", padx=(2, 0))
+
+        self.progress_var = tk.StringVar(value="0/0")
+        ttk.Label(row1, textvariable=self.progress_var, font=("", 10)).pack(side="right")
+        ttk.Separator(row1, orient="vertical").pack(side="right", fill="y", padx=5)
+        ttk.Button(row1, text="📋 列表/日程/周表", command=self.toggle_view).pack(side="right")
+
+        # 第二行：状态信息
         self.schedule_info = ttk.Label(toolbar, text="", foreground="gray", font=("", 9))
-        self.schedule_info.pack(side="right", padx=(0, 10))
-        self.progress_var = tk.StringVar(value="进度：0/0")
-        ttk.Label(toolbar, textvariable=self.progress_var, font=("", 10)).pack(side="right")
-
-        # 视图切换按钮
-        ttk.Separator(toolbar, orient="vertical").pack(side="right", fill="y", padx=5)
-        ttk.Button(toolbar, text="📋 列表 / 🕐 日程 / 📅 周表", command=self.toggle_view).pack(side="right")
+        self.schedule_info.pack(anchor="w")
 
         # 容器（两个视图共享同一区域）
         self.view_container = ttk.Frame(self)
@@ -90,7 +94,7 @@ class TaskTab(ttk.Frame):
         today_tasks = [t for t in tasks if t.get("date", today) == today]
         done = sum(1 for t in today_tasks if t["done"])
         total = len(today_tasks)
-        self.progress_var.set(f"进度：{done}/{total}")
+        self.progress_var.set(f"{done}/{total}")
 
         # 显示空闲时间信息
         ft = self._load_free_time()
@@ -282,7 +286,7 @@ class TaskTab(ttk.Frame):
             self.draw_schedule()
             today_tasks = [t for t in tasks if t.get('date', date.today().isoformat()) == date.today().isoformat()]
             self.progress_var.set(
-                f"进度：{sum(1 for t in today_tasks if t['done'])}/{len(today_tasks)}"
+                f"{sum(1 for t in today_tasks if t['done'])}/{len(today_tasks)}"
             )
             break
 

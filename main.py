@@ -34,8 +34,8 @@ class ShiGuangApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("拾光 v3.3")
-        self.root.geometry("960x640")
-        self.root.minsize(860, 540)
+        self.root.geometry("1050x680")
+        self.root.minsize(900, 560)
         self.root.configure(background=C_PAGE)
         self._setup_style()
 
@@ -117,52 +117,35 @@ class ShiGuangApp:
         pw.pack(fill="both", expand=True)
 
         # ─── 左区：今日任务 ───
-        left = tk.Frame(pw, bg=C_SIDEBAR, width=280)
-        pw.add(left, minsize=220, stretch="never")
+        left = tk.Frame(pw, bg=C_SIDEBAR, width=370)
+        pw.add(left, minsize=320, stretch="never")
 
         tk.Label(left, text="今日任务", font=(FONT, 11, "bold"),
-                 fg=C_TEXT, bg=C_SIDEBAR).pack(anchor="w", padx=14, pady=(10, 4))
-        tk.Frame(left, bg=C_ACCENT, height=1).pack(fill="x", padx=14)
+                 fg=C_TEXT, bg=C_SIDEBAR).pack(anchor="w", padx=14, pady=(8, 4))
 
         self.task_tab = TaskTab(left, self)
-        self.task_tab.pack(fill="both", expand=True, padx=8, pady=6)
+        self.task_tab.pack(fill="both", expand=True, padx=6, pady=4)
 
         # ─── 右区：上下 Notebook ───
         right = tk.Frame(pw, bg=C_PAGE)
-        pw.add(right, minsize=400)
+        pw.add(right, minsize=480)
 
-        # 上方：学习
-        upper = tk.Frame(right, bg=C_PAGE)
-        upper.pack(fill="both", expand=True, pady=(0, 3))
-
-        tk.Label(upper, text="学习", font=(FONT, 10, "bold"),
-                 fg=C_TEXT, bg=C_PAGE).pack(anchor="w", padx=10, pady=(6, 2))
-        tk.Frame(upper, bg=C_ACCENT, height=1).pack(fill="x", padx=10)
-
-        nb_learn = ttk.Notebook(upper)
-        nb_learn.pack(fill="both", expand=True, padx=6, pady=4)
+        nb_learn = ttk.Notebook(right)
+        nb_learn.pack(fill="both", expand=True, pady=(0, 2))
 
         self.week_tab = WeekTab(nb_learn, self)
-        nb_learn.add(self.week_tab, text="  周计划表  ")
+        nb_learn.add(self.week_tab, text="  📅 周计划表  ")
         self.timer_stats_tab = TimerStatsTab(nb_learn, self)
-        nb_learn.add(self.timer_stats_tab, text="  专注统计  ")
+        nb_learn.add(self.timer_stats_tab, text="  ⏱ 专注统计  ")
         nb_learn.bind("<<NotebookTabChanged>>", self._on_learn_tab_changed)
 
-        # 下方：健康
-        lower = tk.Frame(right, bg=C_PAGE)
-        lower.pack(fill="both", expand=True, pady=(3, 0))
-
-        tk.Label(lower, text="健康", font=(FONT, 10, "bold"),
-                 fg=C_TEXT, bg=C_PAGE).pack(anchor="w", padx=10, pady=(6, 2))
-        tk.Frame(lower, bg=C_ACCENT, height=1).pack(fill="x", padx=10)
-
-        nb_health = ttk.Notebook(lower)
-        nb_health.pack(fill="both", expand=True, padx=6, pady=4)
+        nb_health = ttk.Notebook(right)
+        nb_health.pack(fill="both", expand=True, pady=(2, 0))
 
         self.progress_tab = ProgressTab(nb_health, self)
-        nb_health.add(self.progress_tab, text="  训练进度  ")
+        nb_health.add(self.progress_tab, text="  📈 训练进度  ")
         self.timetrack_tab = TimeTrackTab(nb_health, self)
-        nb_health.add(self.timetrack_tab, text="  时间追踪  ")
+        nb_health.add(self.timetrack_tab, text="  📊 时间追踪  ")
         nb_health.bind("<<NotebookTabChanged>>", self._on_health_tab_changed)
 
     def _on_learn_tab_changed(self, ev):
