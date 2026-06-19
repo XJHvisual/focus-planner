@@ -105,7 +105,7 @@ class WeekTab(ttk.Frame):
         ttk.Label(toolbar, text="📅 周计划表", font=("", 13, "bold")).pack(side="left")
         self.week_label = ttk.Label(toolbar, text="", foreground="gray")
         self.week_label.pack(side="left", padx=15)
-        self.week_tag_label = ttk.Label(toolbar, text="", foreground="#1976D2", font=("", 10))
+        self.week_tag_label = ttk.Label(toolbar, text="", foreground="#0D7377", font=("", 10))
         self.week_tag_label.pack(side="left", padx=5)
         ttk.Button(toolbar, text="⬅ 上一周", command=self.prev_week).pack(side="right")
         ttk.Button(toolbar, text="下一周 ➡", command=self.next_week).pack(side="right")
@@ -185,7 +185,7 @@ class WeekTab(ttk.Frame):
         TIME_W, PAD_X, HEADER_H = 60, 4, 52
         N_DAYS, DAY_W = 7, (W - TIME_W - PAD_X * 2) // 7
         DAYS = ["周一","周二","周三","周四","周五","周六","周日"]
-        DAY_COLORS = ["#1976D2","#388E3C","#F57C00","#7B1FA2","#D32F2F","#00796B","#558B2F"]
+        DAY_COLORS = ["#0D7377","#388E3C","#F57C00","#7B1FA2","#D32F2F","#00796B","#558B2F"]
         today = date.today()
 
         # ── 表头 ──
@@ -193,7 +193,7 @@ class WeekTab(ttk.Frame):
             x0 = TIME_W + PAD_X + di * DAY_W
             d = monday + timedelta(days=di)
             is_today = (d == today)
-            bg = "#1976D2" if is_today else "#F0F0F0"
+            bg = "#0D7377" if is_today else "#F0F0F0"
             fg = "white" if is_today else "#555"
             fg2 = "#BBDEFB" if is_today else "#999"
             label = f"{DAYS[di]}📍" if is_today else DAYS[di]
@@ -339,33 +339,33 @@ class WeekTab(ttk.Frame):
         dlg.title(f"🏋️ {DAYS_CN[di]} 锻炼计划")
         dlg.geometry("920x560")
         dlg.transient(self.winfo_toplevel())
-        dlg.configure(bg="#FFFFFF")
+        dlg.configure(bg="#F8F6F2")
 
-        hf = tk.Frame(dlg, bg="#FFFFFF")
+        hf = tk.Frame(dlg, bg="#F8F6F2")
         hf.pack(fill="x", padx=16, pady=(14, 6))
         tk.Label(hf, text=detail["title"], font=("Microsoft YaHei", 13, "bold"),
-                 bg="#FFFFFF", fg="#333").pack(side="left")
+                 bg="#F8F6F2", fg="#4A4238").pack(side="left")
         sub = tk.Label(dlg, text=detail["subtitle"], font=("Microsoft YaHei", 9),
-                        bg="#FFFFFF", fg="#666")
+                        bg="#F8F6F2", fg="#666")
         sub.pack(padx=16, pady=(2, 8))
 
-        list_frame = tk.Frame(dlg, bg="#FFFFFF")
+        list_frame = tk.Frame(dlg, bg="#F8F6F2")
         list_frame.pack(fill="both", expand=True, padx=16, pady=(0, 8))
-        canvas = tk.Canvas(list_frame, bg="#FFFFFF", highlightthickness=0)
+        canvas = tk.Canvas(list_frame, bg="#F8F6F2", highlightthickness=0)
         scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=canvas.yview)
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        inner = tk.Frame(canvas, bg="#FFFFFF")
+        inner = tk.Frame(canvas, bg="#F8F6F2")
         canvas.create_window((0, 0), window=inner, anchor="nw")
 
         for j, (text, w) in enumerate([("序号", 5), ("动作名称", 12), ("组数×次数", 11),
                                         ("详细说明", 48), ("注意事项", 32)]):
             tk.Label(inner, text=text, width=w, font=("Microsoft YaHei", 9, "bold"),
-                     bg="#1976D2", fg="#FFFFFF", padx=2, pady=4).grid(row=0, column=j, sticky="nsew")
+                     bg="#0D7377", fg="#FFFFFF", padx=2, pady=4).grid(row=0, column=j, sticky="nsew")
 
         for r, (seq, name, sets, desc, note) in enumerate(detail["actions"], 1):
-            bg = "#F8F9FA" if r % 2 == 0 else "#FFFFFF"
+            bg = "#F2EFE8" if r % 2 == 0 else "#F8F6F2"
             tk.Label(inner, text=str(seq), width=5, font=("Microsoft YaHei", 9),
                      bg=bg, anchor="center", padx=2, pady=3).grid(row=r, column=0, sticky="nsew")
             tk.Label(inner, text=name, width=12, font=("Microsoft YaHei", 9),

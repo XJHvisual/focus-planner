@@ -22,7 +22,7 @@ class TimerStatsTab(ttk.Frame):
         # 滚动容器
         outer = ttk.Frame(self)
         outer.pack(fill="both", expand=True)
-        canvas = tk.Canvas(outer, bg="#FFFFFF", highlightthickness=0)
+        canvas = tk.Canvas(outer, bg="#F8F6F2", highlightthickness=0)
         scrollbar = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
         self.inner = ttk.Frame(canvas)
         canvas.create_window((0, 0), window=self.inner, anchor="nw", tags="inner")
@@ -81,7 +81,7 @@ class TimerStatsTab(ttk.Frame):
             ("总专注", "total_focus", "#9C27B0"),
         ]:
             # 无边框卡片，用色条做顶部分隔
-            c = tk.Frame(cards, bg="#FFFFFF", highlightthickness=0)
+            c = tk.Frame(cards, bg="#F8F6F2", highlightthickness=0)
             c.pack(side="left", fill="both", expand=True, padx=4)
             # 顶部色条
             bar = tk.Frame(c, bg=color, height=3)

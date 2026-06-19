@@ -29,7 +29,7 @@ class TimeTrackTab(ttk.Frame):
             ("📱 最常用", "top_app", "#EA4335"),
         ]
         for title, key, color in card_items:
-            c = tk.Frame(cards_frame, bg="#FFFFFF", highlightthickness=0)
+            c = tk.Frame(cards_frame, bg="#F8F6F2", highlightthickness=0)
             c.pack(side="left", fill="both", expand=True, padx=4)
             bar = tk.Frame(c, bg=color, height=3)
             bar.pack(fill="x")
@@ -201,7 +201,7 @@ class TimeTrackTab(ttk.Frame):
                 bw = 4
             color = self.CARD_COLORS[i % len(self.CARD_COLORS)]
             short = (name[:16] + "…") if len(name) > 17 else name
-            cv.create_text(100, y + bar_h // 2, text=short, font=font, anchor="e", fill="#333")
+            cv.create_text(100, y + bar_h // 2, text=short, font=font, anchor="e", fill="#4A4238")
             cv.create_rectangle(110, y, 110 + bw, y + bar_h, fill=color, outline="", tags="bar")
             m, s = divmod(td, 60)
             hh, m = divmod(m, 60)

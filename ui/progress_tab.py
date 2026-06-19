@@ -43,7 +43,7 @@ class ProgressTab(ttk.Frame):
         mid.pack(fill="both", expand=True, padx=10, pady=5)
 
         # 体重趋势
-        left = tk.Frame(mid, bg="#FFFFFF", highlightthickness=0)
+        left = tk.Frame(mid, bg="#F8F6F2", highlightthickness=0)
         left.pack(side="left", fill="both", expand=True, padx=(0,5))
         tk.Frame(left, bg="#2196F3", height=3).pack(fill="x")
         ttk.Label(left, text="⚖ 体重趋势", font=("Microsoft YaHei", 9, "bold"),
@@ -53,7 +53,7 @@ class ProgressTab(ttk.Frame):
         self.weight_canvas.bind("<Configure>", lambda e: self.draw_weight_chart())
 
         # 完成率
-        right = tk.Frame(mid, bg="#FFFFFF", highlightthickness=0)
+        right = tk.Frame(mid, bg="#F8F6F2", highlightthickness=0)
         right.pack(side="left", fill="both", expand=True, padx=(5,0))
         tk.Frame(right, bg="#4CAF50", height=3).pack(fill="x")
         ttk.Label(right, text="✅ 每周完成率", font=("Microsoft YaHei", 9, "bold"),
@@ -195,14 +195,14 @@ class ProgressTab(ttk.Frame):
             coords.extend([x, y])
 
         if len(coords) >= 4:
-            c.create_line(*coords, fill="#1976D2", width=2, smooth=True)
+            c.create_line(*coords, fill="#0D7377", width=2, smooth=True)
 
         for i, (ds, w) in enumerate(points):
             x = PAD_L + cw * i / max(n - 1, 1)
             y = PAD_T + ch * (1 - (w - w_min) / (w_max - w_min))
-            c.create_oval(x-4, y-4, x+4, y+4, fill="#1976D2", outline="white", width=2)
+            c.create_oval(x-4, y-4, x+4, y+4, fill="#0D7377", outline="white", width=2)
             # 数据点上方显示具体体重
-            c.create_text(x, y - 12, text=f"{w:.1f}", fill="#1976D2", font=("", 8, "bold"))
+            c.create_text(x, y - 12, text=f"{w:.1f}", fill="#0D7377", font=("", 8, "bold"))
             # X标签（间隔显示）
             if n <= 10 or i % max(1, n // 7) == 0:
                 label = ds[5:]  # MM-DD

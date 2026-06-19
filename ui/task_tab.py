@@ -170,7 +170,7 @@ class TaskTab(ttk.Frame):
         # 颜色
         COLORS = ["#E3F2FD", "#E8F5E9", "#FFF3E0", "#F3E5F5", "#E0F7FA",
                   "#FFF9C4", "#F1F8E9", "#FCE4EC", "#EDE7F6", "#E8EAF6"]
-        BLUE = "#1976D2"
+        BLUE = "#0D7377"
         GREEN = "#2E7D32"
         GRAY = "#9E9E9E"
         LIGHT_GRAY = "#F5F5F5"
@@ -226,7 +226,7 @@ class TaskTab(ttk.Frame):
                 continue
 
             color = COLORS[color_idx % len(COLORS)]
-            dark = "#5C6BC0" if t["done"] else "#1565C0"
+            dark = "#5A8F7A" if t["done"] else "#0A5E61"
             color_idx += 1
 
             # 任务块背景
@@ -241,7 +241,7 @@ class TaskTab(ttk.Frame):
             dur = t.get("duration_min", 30)
             label = f"{'✅' if t['done'] else '⬜'} {name} ({dur}min)"
             c.create_text(BAR_X + 8, y1 + (y2 - y1) // 2,
-                          text=label, anchor="w", fill="#333", font=("", 10, "bold"),
+                          text=label, anchor="w", fill="#4A4238", font=("", 10, "bold"),
                           tags=f"task_{t['id']}")
 
         # 未排程任务列表（显示在底部）
@@ -333,7 +333,7 @@ class TaskTab(ttk.Frame):
             is_today = (di == today_weekday)
             if is_today:
                 c.create_rectangle(x, 0, x + DAY_W, HEADER_H,
-                                    fill="#1976D2", outline="#1565C0")
+                                    fill="#0D7377", outline="#0A5E61")
                 date_label = (monday + timedelta(days=di)).strftime("%m/%d")
                 c.create_text(x + DAY_W // 2, 18, text=f"{day_name} 📍",
                               fill="white", font=("", 11, "bold"))
@@ -420,7 +420,7 @@ class TaskTab(ttk.Frame):
                 prefix = "✅" if t["done"] else "⬜"
                 c.create_text(x1 + (x2 - x1) // 2, y1 + (y2 - y1) // 2,
                               text=f"{prefix}{name}",
-                              fill="#333", font=("", 8, "bold"),
+                              fill="#4A4238", font=("", 8, "bold"),
                               tags=tags)
 
         # 滚动区域
