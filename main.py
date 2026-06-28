@@ -32,6 +32,7 @@ C_TOOLBAR  = "#E6F5F2"   # 工具栏
 C_TASK_BG  = "#F4FAF8"   # 任务区
 C_STUDY_BG = "#ECF7F5"   # 学习区
 C_HEALTH_BG= "#FEF8F4"   # 健康区（暖橙底）
+C_LINE     = "#D4EDE9"   # 卡片细线
 FONT       = "Microsoft YaHei"
 
 
@@ -84,7 +85,9 @@ class ShiGuangApp:
                   activebackground="#0F9688", activeforeground="#FFFFFF",
                   cursor="hand2", command=self._set_exam_date).pack(side="left")
 
-        tk.Frame(self.root, bg=C_ACCENT, height=2).pack(fill="x")
+        # Canvas 装饰线（teal → mint 渐变暗示）
+        accent_line = tk.Canvas(self.root, height=2, bg=C_PAGE, highlightthickness=0)
+        accent_line.pack(fill="x")
 
     # ── 工具栏 ──
     def _build_toolbar(self):
@@ -97,13 +100,16 @@ class ShiGuangApp:
         pw.pack(fill="both", expand=True)
 
         # ═══ 上区：今日任务（全宽）═══
-        top = tk.Frame(pw, bg=C_TASK_BG)
+        top = tk.Frame(pw, bg=C_TASK_BG,
+                      highlightthickness=1, highlightbackground=C_LINE)
         pw.add(top, minsize=240, stretch="always")
 
-        # 区域标题 + 左侧色条
+        # 区域标题（Canvas 圆点替代侧边条）
         hdr = tk.Frame(top, bg=C_TASK_BG)
         hdr.pack(fill="x", padx=10, pady=(6, 0))
-        tk.Frame(hdr, bg=C_AMBER, width=3).pack(side="left", fill="y", padx=(0, 6))
+        dot = tk.Canvas(hdr, width=10, height=10, bg=C_TASK_BG, highlightthickness=0)
+        dot.create_oval(2, 2, 8, 8, fill=C_AMBER, outline="")
+        dot.pack(side="left", padx=(0, 6))
         tk.Label(hdr, text="今日任务", font=(FONT, 11, "bold"),
                  fg=C_TEXT, bg=C_TASK_BG).pack(side="left")
 
@@ -115,12 +121,15 @@ class ShiGuangApp:
         pw.add(bottom, minsize=300, stretch="always")
 
         # 左侧 Notebook：学习看板
-        study_frame = tk.Frame(bottom, bg=C_STUDY_BG)
+        study_frame = tk.Frame(bottom, bg=C_STUDY_BG,
+                              highlightthickness=1, highlightbackground=C_LINE)
         study_frame.pack(side="left", fill="both", expand=True, padx=(4, 2), pady=4)
 
         shdr = tk.Frame(study_frame, bg=C_STUDY_BG)
         shdr.pack(fill="x", padx=8, pady=(4, 0))
-        tk.Frame(shdr, bg=C_ACCENT, width=3).pack(side="left", fill="y", padx=(0, 6))
+        dot2 = tk.Canvas(shdr, width=10, height=10, bg=C_STUDY_BG, highlightthickness=0)
+        dot2.create_oval(2, 2, 8, 8, fill=C_ACCENT, outline="")
+        dot2.pack(side="left", padx=(0, 6))
         tk.Label(shdr, text="学习看板", font=(FONT, 10, "bold"),
                  fg=C_TEXT, bg=C_STUDY_BG).pack(side="left")
 
@@ -141,12 +150,15 @@ class ShiGuangApp:
         self.nb_learn = nb_learn
 
         # 右侧 Notebook：健康数据
-        health_frame = tk.Frame(bottom, bg=C_HEALTH_BG)
+        health_frame = tk.Frame(bottom, bg=C_HEALTH_BG,
+                               highlightthickness=1, highlightbackground=C_LINE)
         health_frame.pack(side="right", fill="both", expand=True, padx=(2, 4), pady=4)
 
         hhdr = tk.Frame(health_frame, bg=C_HEALTH_BG)
         hhdr.pack(fill="x", padx=8, pady=(4, 0))
-        tk.Frame(hhdr, bg=C_RED, width=3).pack(side="left", fill="y", padx=(0, 6))
+        dot3 = tk.Canvas(hhdr, width=10, height=10, bg=C_HEALTH_BG, highlightthickness=0)
+        dot3.create_oval(2, 2, 8, 8, fill=C_RED, outline="")
+        dot3.pack(side="left", padx=(0, 6))
         tk.Label(hhdr, text="健康数据", font=(FONT, 10, "bold"),
                  fg=C_TEXT, bg=C_HEALTH_BG).pack(side="left")
 
