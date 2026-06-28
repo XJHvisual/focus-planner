@@ -48,7 +48,7 @@ class ProgressTab(ttk.Frame):
         tk.Frame(left, bg="#2196F3", height=3).pack(fill="x")
         ttk.Label(left, text="⚖ 体重趋势", font=("Microsoft YaHei", 9, "bold"),
                   foreground="#666").pack(anchor="w", padx=5, pady=(5, 2))
-        self.weight_canvas = tk.Canvas(left, bg="white", height=215, highlightthickness=0)
+        self.weight_canvas = tk.Canvas(left, bg="white", highlightthickness=0)
         self.weight_canvas.pack(fill="both", expand=True)
         self.weight_canvas.bind("<Configure>", lambda e: self.draw_weight_chart())
 
@@ -58,13 +58,13 @@ class ProgressTab(ttk.Frame):
         tk.Frame(right, bg="#4CAF50", height=3).pack(fill="x")
         ttk.Label(right, text="✅ 每周完成率", font=("Microsoft YaHei", 9, "bold"),
                   foreground="#666").pack(anchor="w", padx=5, pady=(5, 2))
-        self.rate_canvas = tk.Canvas(right, bg="white", height=215, highlightthickness=0)
+        self.rate_canvas = tk.Canvas(right, bg="white", highlightthickness=0)
         self.rate_canvas.pack(fill="both", expand=True)
         self.rate_canvas.bind("<Configure>", lambda e: self.draw_rate_chart())
 
         # 下部：记录表
         bot = ttk.LabelFrame(self, text="📋 历史记录", padding=5)
-        bot.pack(fill="both", expand=True, padx=10, pady=(0,5))
+        bot.pack(fill="x", padx=10, pady=(0,5))
         cols = ("date", "weight", "bmi", "training_done", "training_total")
         self.rec_tree = ttk.Treeview(bot, columns=cols, show="headings", height=6)
         self.rec_tree.heading("date", text="日期")
@@ -80,7 +80,6 @@ class ProgressTab(ttk.Frame):
         rec_sb = ttk.Scrollbar(bot, orient="vertical", command=self.rec_tree.yview)
         self.rec_tree.configure(yscrollcommand=rec_sb.set)
         self.rec_tree.pack(side="left", fill="both", expand=True)
-        rec_sb.pack(side="right", fill="y")
         self.rec_tree.bind("<MouseWheel>", lambda e: self.rec_tree.yview_scroll(int(-1 * e.delta / 120), "units"))
 
         # 初始化时刷新身高/BMI显示
@@ -102,14 +101,17 @@ class ProgressTab(ttk.Frame):
         if not ds:
             messagebox.showwarning("提示", "请输入日期")
             return
+        if not w:
+            messagebox.showwarning("提示", "请输入体重")
+            return
+        try:
+            weight = float(w)
+        except ValueError:
+            messagebox.showerror("错误", "体重必须是数字")
+            return
         log = self._load_log()
         entry = log.get(ds, {})
-        if w:
-            try:
-                entry["weight"] = float(w)
-            except ValueError:
-                messagebox.showerror("错误", "体重必须是数字")
-                return
+        entry["weight"] = weight
         log[ds] = entry
         self._save_log(log)
         self.refresh_progress()

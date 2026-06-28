@@ -10,21 +10,16 @@ OBSIDIAN_PCO = r'D:\12081\Documents\PCO'
 
 from ocr import format_as_markdown, save_to_obsidian, clean_text
 
-# ── 引擎可用性检测 ──
+# ── 引擎可用性检测（用 find_spec 避免导入卡 UI）──
+import importlib.util as _iu
 def _check_tesseract():
     return os.path.exists(TESSERACT) and os.path.isdir(TESSDATA)
 
 def _check_easyocr():
-    try:
-        import easyocr; return True
-    except ImportError:
-        return False
+    return _iu.find_spec("easyocr") is not None
 
 def _check_paddle():
-    try:
-        from paddleocr import PaddleOCR; return True
-    except ImportError:
-        return False
+    return _iu.find_spec("paddleocr") is not None
 
 class OcrTab(ttk.Frame):
     def __init__(self, parent, app):
@@ -130,7 +125,13 @@ class OcrTab(ttk.Frame):
 
     def show_preview(self, path):
         try:
+            from PIL import ImageOps
             img = Image.open(path)
+            # 自动修正 EXIF 旋转（手机拍照常见问题）
+            try:
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass  # 无 EXIF 或无法解析，保持原样
             w, h = img.size
             cw = self.canvas.winfo_width() or 600
             ch = self.canvas.winfo_height() or 200
@@ -154,10 +155,11 @@ class OcrTab(ttk.Frame):
         self.progress.start()
         self.status_label.pack(side="left")
         self.status_label.config(text="识别中...")
-        threading.Thread(target=self._run_ocr, daemon=True).start()
-
-    def _run_ocr(self):
         engine = self.engine_var.get()
+        use_md = self.md_var.get()
+        threading.Thread(target=self._run_ocr, args=(engine, use_md), daemon=True).start()
+
+    def _run_ocr(self, engine, use_md):
         try:
             env = os.environ.copy()
             env['TESSDATA_PREFIX'] = TESSDATA
@@ -174,7 +176,7 @@ class OcrTab(ttk.Frame):
             else:
                 result = "无可用引擎，请安装 Tesseract/EasyOCR/PaddleOCR"
 
-            if self.md_var.get() and result and engine != "none":
+            if use_md and result and engine != "none":
                 result = format_as_markdown(result)
 
         except Exception as e:

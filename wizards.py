@@ -8,21 +8,10 @@ from datetime import datetime, date
 from config import DATA_DIR, GOALS_FILE, FITNESS_DETAIL_DATA, SETTINGS_FILE
 from data_manager import DataManager
 
-class SmartGoalWizard(tk.Toplevel):
+class SmartGoalWizard(ttk.Frame):
     def __init__(self, parent, on_generate, mode="generic"):
         super().__init__(parent)
         self.mode = mode
-        self.title("考研目标智能拆解")
-        self.geometry("500x450")
-        self.resizable(False, False)
-        self.transient(parent)
-        self.grab_set()
-        # 居中
-        self.update_idletasks()
-        pw, ph = parent.winfo_width(), parent.winfo_height()
-        px = parent.winfo_rootx() + max(0, (pw - 500) // 2)
-        py = parent.winfo_rooty() + max(0, (ph - 450) // 2)
-        self.geometry(f"500x450+{px}+{py}")
         self.on_generate = on_generate
         self.pages = []
         self.current_page = 0
@@ -41,6 +30,9 @@ class SmartGoalWizard(tk.Toplevel):
         self.btn_prev.pack(side="left")
         self.btn_next = ttk.Button(self.btn_frame, text="下一步", command=self.next_page)
         self.btn_next.pack(side="right")
+
+        self.status_label = ttk.Label(self, text="", font=("", 10))
+        self.status_label.pack(pady=(0, 5))
 
         self.create_page_1()
         self.show_page(0)
@@ -218,8 +210,27 @@ class SmartGoalWizard(tk.Toplevel):
                 levels["每周"][i % len(levels["每周"])]["children"].append(d["id"])
 
         self.on_generate(goals)
-        messagebox.showinfo("完成", f"已生成 {len(goals)} 个目标！\n点击「目标拆解」页查看")
-        self.destroy()
+        self._reset_form()
+        if hasattr(self, 'status_label'):
+            self.status_label.config(text=f"✓ 已生成 {len(goals)} 个目标！", foreground="green")
+
+    def _reset_form(self):
+        self.current_page = 0
+        self.data = {}
+        for name in ["entry_school", "entry_major", "entry_score", "entry_grade"]:
+            if hasattr(self, name):
+                entry = getattr(self, name)
+                try:
+                    entry.delete(0, "end")
+                except Exception:
+                    pass
+        if hasattr(self, "subject_entries"):
+            for entry in self.subject_entries.values():
+                try:
+                    entry.delete(0, "end")
+                except Exception:
+                    pass
+        self.show_page(0)
 
     _gid_counter = 0
 

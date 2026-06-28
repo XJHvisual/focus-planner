@@ -70,12 +70,55 @@ class BuiltinTracker:
         "VALORANT": "valorant",
         "Riot Client": "valorant",
         "Hermes": "Hermes",
+        "5E": "5e对战平台",
+        "5e": "5e对战平台",
     }
     # 标题关键词映射（含deepseek/gemini等模型名 → Hermes）
     _title_keywords = [
         (["deepseek", "claude", "gemini", "gpt", "hermes"], "Hermes"),
+        (["5e", "5E", "5EClient"], "5e对战平台"),
     ]
+    # 已知正常应用名（免过滤）
+    KNOWN_APPS = {
+        'python', 'pythonw', 'taskmgr', 'mysqlworkbench', 'mysqlshellworkbench',
+        'notepad', 'chrome', 'msedge', 'obsidian', 'cursor', 'devenv',
+        'valorant', 'cs2', 'weixin', 'douyin', 'wps', 'electron',
+        'windowsterminal', 'powershell', 'cmd', 'explorer',
+        'java', 'javaw', 'steam', 'steamwebhelper', 'snippingtool',
+        'fontview', 'bodian', 'launcher', 'powerpnt', 'pickhost',
+        'shellexperiencehost', 'shellhost', 'searchhost',
+        'photolaunch', 'openwith', 'werfault', 'zipmaster',
+    }
+    # 随机进程名检测
+    @staticmethod
+    def _is_random_name(name):
+        if not name or len(name) < 5:
+            return False
+        lower = name.lower()
+        if lower in BuiltinTracker.KNOWN_APPS:
+            return False
+        letters = [c for c in lower if c.isalpha()]
+        if not letters:
+            return False
+        vowels = sum(1 for c in letters if c in 'aeiou')
+        ratio = vowels / len(letters) if letters else 0
+        # 无元音 + 长度≥6 = 随机串
+        if ratio == 0 and len(lower) >= 6:
+            return True
+        # 元音极少(<10%) + 大小写混用 + 长度≥8 = 随机串
+        has_upper = any(c.isupper() for c in name)
+        has_lower = any(c.islower() for c in name)
+        if ratio < 0.10 and has_upper and has_lower and len(name) >= 8:
+            return True
+        return False
     IGNORE_APPS = {"nexus", "nexusportable", "rocketdock", "rainmeter", "wallpaperengine"}
+    # 已知随机进程名（无法识别来源的应用，直接忽略）
+    RANDOM_APPS = {
+        't1rlujgjsosf', 'bfefwxbs', 'q1rr9io', 'rfqs1lufak', 'kqembdvpack6r9',
+        'mi03cgmwbnqwurc', 'zeb5ecdb4nqwurc', 'bsoip5kd4nqwurc',
+        'f4vwvlm2hb1bmhk', 'ui32', '0fliogrxri', '0nqya3juwc2',
+        'ubm5fnguwc2', 'xntinfzzfgr41', 'vsouo3g2m', 'kp6h5rtxiebj',
+    }
 
     def _get_foreground(self):
         """通过 Win32 API 获取当前前台窗口信息"""
@@ -110,7 +153,7 @@ class BuiltinTracker:
                     kernel32.CloseHandle(h_process)
 
             # 忽略规则
-            if process_name in self.IGNORE_APPS:
+            if process_name in self.IGNORE_APPS or process_name in self.RANDOM_APPS:
                 return None, ""
 
             # 进程名归一化
@@ -145,8 +188,16 @@ class BuiltinTracker:
                     # 用标题作为应用名（前20字符）
                     clean = title.strip()
                     process_name = clean[:20].lower() if len(clean) <= 20 else clean[:18].lower() + "…"
+
+            # 过滤随机/无意义进程名（如 t1rlujgjsosf、bfefwxbs）
+            if not title.strip() or title.strip().lower() == process_name.lower():
+                if self._is_random_name(process_name):
+                    return None, ""  # 跳过随机串
             elif process_name == "unknown" and (not title or not title.strip()):
                 return None, ""
+
+            # 统一小写（仅英文部分，中文不受影响）
+            process_name = process_name.lower()
 
             return process_name, title
         except Exception:

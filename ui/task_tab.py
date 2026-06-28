@@ -54,7 +54,6 @@ class TaskTab(ttk.Frame):
         list_sb = ttk.Scrollbar(self.list_frame, orient="vertical", command=self.task_list.yview)
         self.task_list.configure(yscrollcommand=list_sb.set)
         self.task_list.pack(side="left", fill="both", expand=True)
-        list_sb.pack(side="right", fill="y")
         self.task_list.bind("<MouseWheel>", lambda e: self.task_list.yview_scroll(int(-1 * e.delta / 120), "units"))
         self.task_list.bind("<Double-1>", self.toggle_task)
 
@@ -64,7 +63,6 @@ class TaskTab(ttk.Frame):
         sch_sb = ttk.Scrollbar(self.schedule_frame, orient="vertical", command=self.schedule_canvas.yview)
         self.schedule_canvas.configure(yscrollcommand=sch_sb.set)
         self.schedule_canvas.pack(side="left", fill="both", expand=True)
-        sch_sb.pack(side="right", fill="y")
         self.schedule_canvas.bind("<Configure>", lambda e: self.draw_schedule())
         self.schedule_canvas.bind("<Button-1>", self.on_schedule_click)
         self.schedule_canvas.bind("<MouseWheel>", lambda e: self.schedule_canvas.yview_scroll(int(-1 * e.delta / 120), "units"))
@@ -75,7 +73,6 @@ class TaskTab(ttk.Frame):
         wk_sb = ttk.Scrollbar(self.week_frame, orient="vertical", command=self.week_canvas.yview)
         self.week_canvas.configure(yscrollcommand=wk_sb.set)
         self.week_canvas.pack(side="left", fill="both", expand=True)
-        wk_sb.pack(side="right", fill="y")
         self.week_canvas.bind("<Configure>", lambda e: self.draw_week())
         self.week_canvas.bind("<Button-1>", self.on_week_click)
         self.week_canvas.bind("<MouseWheel>", lambda e: self.week_canvas.yview_scroll(int(-1 * e.delta / 120), "units"))
@@ -110,6 +107,10 @@ class TaskTab(ttk.Frame):
             rec = t.get("recommended_time", "")
             self.task_list.insert("", "end", values=(status, dur, rec),
                                    text=t["name"], iid=t["id"])
+
+        # 操作后自检所有模块
+        if hasattr(self.app, 'check_all_modules'):
+            self.app.root.after(200, self._run_self_check)
 
         if self.view_mode.get() == "schedule":
             self.draw_schedule()
@@ -519,6 +520,17 @@ class TaskTab(ttk.Frame):
         tasks = [t for t in tasks if not (t.get("date", today) == today and t["done"])]
         DataManager.save(TASKS_FILE, tasks)
         self.refresh_task_list()
+
+    def _run_self_check(self):
+        """延迟执行模块自检，避免阻塞 UI"""
+        issues = self.app.check_all_modules()
+        if issues:
+            msg = "\n".join(issues[:5])
+            if len(issues) > 5:
+                msg += f"\n… 还有 {len(issues)-5} 个问题"
+            self.schedule_info.config(text=msg, foreground="#EF4444")
+        else:
+            self.schedule_info.config(text="", foreground="gray")
 
     # -------- 空闲时间管理 --------
     def _load_free_time(self):

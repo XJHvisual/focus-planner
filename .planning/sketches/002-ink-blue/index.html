@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=1050"><title>拾光 · 深蓝金</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei",-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000}
+.app{width:1050px;height:750px;background:#020617;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column}
+.banner{height:48px;background:linear-gradient(135deg,#020617,#0F1A2E,#020617);display:flex;align-items:center;padding:0 18px;border-bottom:1px solid #1E293B;flex-shrink:0}
+.banner-title{color:#B8923E;font-size:18px;font-weight:700;letter-spacing:4px}
+.banner-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.countdown{color:#E2E8F0;font-size:12px;background:#0F172A;padding:3px 10px;border-radius:4px;border:1px solid #1E293B}
+.clock{color:#64748B;font-size:12px}
+.close{color:#475569;cursor:pointer;font-size:16px}
+.toolbar{height:34px;background:#0F172A;display:flex;align-items:center;padding:0 12px;gap:8px;border-bottom:1px solid #1E293B;flex-shrink:0}
+.tool-btn{color:#64748B;font-size:11px;padding:4px 12px;border-radius:4px;cursor:pointer;transition:all .15s}
+.tool-btn:hover{background:#1E293B;color:#B8923E}
+.divider{height:2px;background:linear-gradient(90deg,transparent,#B8923E 20%,#22C55E 80%,transparent);flex-shrink:0}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-zone{flex:0 0 200px;background:#0F172A;margin:8px 8px 4px 8px;border-radius:10px;border:1px solid #1E293B;display:flex;flex-direction:column;overflow:hidden}
+.zone-header{padding:10px 14px 6px;display:flex;align-items:center;gap:8px}
+.zone-dot{width:6px;height:6px;border-radius:50%;background:#B8923E;box-shadow:0 0 8px #B8923E}
+.zone-title{color:#F8FAFC;font-size:13px;font-weight:600}
+.zone-sub{color:#475569;font-size:10px;margin-left:auto}
+.task-body{flex:1;background:#020617;margin:0 6px 6px;border-radius:6px;display:flex;flex-direction:column;padding:8px}
+.task-row-bar{display:flex;gap:4px;margin-bottom:6px}
+.task-btn{color:#64748B;font-size:10px;padding:3px 8px;background:#0F172A;border:1px solid #1E293B;border-radius:4px;cursor:pointer}
+.task-btn:hover{color:#B8923E;border-color:#334155}
+.task-list{flex:1;overflow:hidden}
+.task-item{display:flex;align-items:center;padding:7px 10px;border-bottom:1px solid #0F172A;color:#CBD5E1;font-size:12px}
+.task-item:hover{background:#0F172A}
+.task-check{width:16px;height:16px;border:1px solid #334155;border-radius:3px;margin-right:10px;display:flex;align-items:center;justify-content:center}
+.task-done .task-check{background:#22C55E;border-color:#22C55E}
+.task-done .task-check::after{content:'✓';color:#020617;font-size:10px}
+.bottom-zone{flex:1;display:flex;gap:4px;padding:0 8px 8px;overflow:hidden}
+.study-zone{flex:6;background:#0F172A;border-radius:10px;border:1px solid #1E293B;display:flex;flex-direction:column;overflow:hidden}
+.health-zone{flex:4;background:#0F172A;border-radius:10px;border:1px solid #1E293B;display:flex;flex-direction:column;overflow:hidden}
+.dot-teal{background:#22C55E!important;box-shadow:0 0 8px #22C55E}
+.dot-coral{background:#EF4444!important;box-shadow:0 0 8px #EF4444}
+.tabs{display:flex;border-bottom:1px solid #1E293B;padding:0 8px;flex-shrink:0}
+.tab{padding:8px 16px;color:#475569;font-size:11px;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:#B8923E;border-bottom-color:#B8923E}
+.tab:hover{color:#94A3B8}
+.tab-body{flex:1;overflow:hidden;padding:8px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.day-col{background:#020617;border-radius:4px;padding:4px}
+.day-label{text-align:center;color:#475569;font-size:10px;padding:2px 0;border-bottom:1px solid #0F172A}
+.day-date{text-align:center;color:#64748B;font-size:9px}
+.day-block{margin-top:3px;padding:2px 4px;border-radius:2px;font-size:8px;color:#fff}
+.day-block.course{background:#052E16;border-left:2px solid #22C55E}
+.day-block.fitness{background:#2A1A08;border-left:2px solid #B8923E}
+.timer-section{display:flex;flex-direction:column;align-items:center;padding:16px}
+.timer-display{font-size:52px;font-weight:700;color:#F8FAFC;font-family:Consolas,monospace;letter-spacing:-2px}
+.timer-display .colon{color:#B8923E}
+.timer-label{color:#64748B;font-size:11px}
+.timer-presets{display:flex;gap:6px;margin-top:12px}
+.preset{color:#64748B;font-size:10px;padding:4px 10px;background:#020617;border:1px solid #1E293B;border-radius:4px;cursor:pointer}
+.preset.active{color:#B8923E;border-color:#B8923E;background:#1A1708}
+.timer-actions{margin-top:16px}
+.timer-play{color:#020617;background:#B8923E;border:none;padding:10px 28px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+/* KPI cards at bottom of health zone */
+.kpi-row{display:flex;gap:8px;margin-top:12px;padding:0 12px}
+.kpi-card{flex:1;background:#020617;border-radius:6px;padding:10px;text-align:center;border:1px solid #1E293B}
+.kpi-value{color:#F8FAFC;font-size:24px;font-weight:700}
+.kpi-label{color:#64748B;font-size:10px;margin-top:2px}
+.kpi-accent{color:#B8923E}
+.kpi-green{color:#22C55E}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="banner">
+    <span class="banner-title">拾 光</span>
+    <div class="banner-right">
+      <span class="countdown">距考研 183 天</span>
+      <span class="clock">06月19日 周五</span>
+      <span class="close">✕</span>
+    </div>
+  </div>
+  <div class="toolbar">
+    <span class="tool-btn">🎯 目标拆解</span>
+    <span class="tool-btn">🔍 文字识别</span>
+    <span class="tool-btn" style="margin-left:auto">3/8 已完成</span>
+  </div>
+  <div class="divider"></div>
+  <div class="content">
+    <div class="top-zone">
+      <div class="zone-header">
+        <div class="zone-dot"></div>
+        <span class="zone-title">今日任务</span>
+        <span class="zone-sub">3 / 8</span>
+      </div>
+      <div class="task-body">
+        <div class="task-row-bar">
+          <span class="task-btn">➕ 添加</span><span class="task-btn">🗑 删除</span><span class="task-btn">🔄 清除</span>
+          <span style="margin-left:auto"><span class="task-btn">⏰ 空闲</span><span class="task-btn">📅 排程</span></span>
+        </div>
+        <div class="task-list">
+          <div class="task-item task-done"><div class="task-check"></div>信息安全数学第7章</div>
+          <div class="task-item task-done"><div class="task-check"></div>数据库原理 SQL 练习</div>
+          <div class="task-item task-done"><div class="task-check"></div>英语阅读 2 篇</div>
+          <div class="task-item"><div class="task-check"></div>政治马原第3章笔记</div>
+          <div class="task-item"><div class="task-check"></div>计组 Cache 映射习题</div>
+          <div class="task-item"><div class="task-check"></div>数学概率论第5章</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-zone">
+      <div class="study-zone">
+        <div class="zone-header">
+          <div class="zone-dot dot-teal"></div>
+          <span class="zone-title">学习看板</span>
+        </div>
+        <div class="tabs">
+          <span class="tab active">📅 周计划表</span>
+          <span class="tab">⏱ 专注统计</span>
+        </div>
+        <div class="tab-body">
+          <div class="grid">
+            <div class="day-col"><div class="day-label">周一</div><div class="day-date">06/16</div><div class="day-block course">数据库</div><div class="day-block fitness">上肢</div></div>
+            <div class="day-col"><div class="day-label">周二</div><div class="day-date">06/17</div><div class="day-block course">信息安全</div></div>
+            <div class="day-col"><div class="day-label">周三 📍</div><div class="day-date">06/18</div><div class="day-block fitness">下肢</div></div>
+            <div class="day-col"><div class="day-label">周四</div><div class="day-date">06/19</div><div class="day-block course">计组</div><div class="day-block fitness">背部</div></div>
+            <div class="day-col"><div class="day-label">周五</div><div class="day-date">06/20</div></div>
+            <div class="day-col"><div class="day-label">周六</div><div class="day-date">06/21</div><div class="day-block fitness">核心</div></div>
+            <div class="day-col"><div class="day-label">周日</div><div class="day-date">06/22</div><div class="day-block fitness">下肢</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="health-zone">
+        <div class="zone-header">
+          <div class="zone-dot dot-coral"></div>
+          <span class="zone-title">健康数据</span>
+        </div>
+        <div class="tabs">
+          <span class="tab active">📈 训练进度</span>
+          <span class="tab">📊 时间追踪</span>
+        </div>
+        <div class="tab-body">
+          <div class="timer-section">
+            <div class="timer-display">90<span class="colon">:</span>00</div>
+            <div class="timer-label">专注计时 · 就绪</div>
+            <div class="timer-presets">
+              <span class="preset">15</span><span class="preset">25</span><span class="preset">45</span>
+              <span class="preset active">90</span><span class="preset">120</span>
+            </div>
+            <div class="timer-actions">
+              <button class="timer-play">▶ 开始专注</button>
+            </div>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi-card"><div class="kpi-value kpi-accent">4.2h</div><div class="kpi-label">今日专注</div></div>
+            <div class="kpi-card"><div class="kpi-value kpi-green">18.6h</div><div class="kpi-label">本周累计</div></div>
+            <div class="kpi-card"><div class="kpi-value">87%</div><div class="kpi-label">完成率</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

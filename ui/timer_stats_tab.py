@@ -28,7 +28,6 @@ class TimerStatsTab(ttk.Frame):
         canvas.create_window((0, 0), window=self.inner, anchor="nw", tags="inner")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
 
         def _on_canvas_configure(event):
             canvas.itemconfig("inner", width=event.width)
@@ -112,7 +111,6 @@ class TimerStatsTab(ttk.Frame):
         rec_sb = ttk.Scrollbar(rec_frame, orient="vertical", command=self.rec_tree.yview)
         self.rec_tree.configure(yscrollcommand=rec_sb.set)
         self.rec_tree.pack(side="left", fill="both", expand=True)
-        rec_sb.pack(side="right", fill="y")
         self.rec_tree.bind("<MouseWheel>", lambda e: self.rec_tree.yview_scroll(int(-1 * e.delta / 120), "units"))
 
         self.refresh_stats()
