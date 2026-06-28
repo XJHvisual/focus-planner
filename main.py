@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox
 import sys
 from datetime import datetime, date
 
-from config import is_another_instance_running, SETTINGS_FILE
+from config import is_another_instance_running, SETTINGS_FILE, TASKS_FILE, GOALS_FILE, RECORDS_FILE, FOCUS_FILE, TRAINING_LOG_FILE, FREE_TIME_FILE
 from data_manager import DataManager
 from tracker import BuiltinTracker
 from wizards import SmartGoalWizard, Wizard408
@@ -15,6 +15,7 @@ from ui.week_tab import WeekTab
 from ui.time_track_tab import TimeTrackTab
 from ui.progress_tab import ProgressTab
 from ui.ocr_tab import OcrTab
+from ui.hot_tab import HotTab
 
 # ── UI/UX Pro Max 配色：Flat Design · 薄荷清新 ──
 C_PAGE     = "#F0FDFA"   # 页底：薄荷白
@@ -38,8 +39,8 @@ class ShiGuangApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("拾光 v3.3")
-        self.root.geometry("1050x750")
-        self.root.minsize(900, 620)
+        self.root.geometry("1440x900")
+        self.root.minsize(1100, 750)
         self.root.configure(background=C_PAGE)
         self._setup_style()
 
@@ -66,7 +67,7 @@ class ShiGuangApp:
 
         self.exam_date = self._load_settings().get("exam_date")
         self.countdown_label = tk.Label(right_area, text="",
-            font=(FONT, 10, "bold"), bg=C_HEADER)
+            font=(FONT, 10, "bold"), bg=C_HEADER, fg="#FFFFFF")
         if self.exam_date:
             self.countdown_label.pack(side="left", padx=(0, 10))
         self._refresh_countdown()
@@ -74,7 +75,7 @@ class ShiGuangApp:
         now = datetime.now()
         self.clock_label = tk.Label(right_area,
             text=now.strftime("%m月%d日 %H:%M"),
-            font=(FONT, 10), fg=C_SUBTLE, bg=C_HEADER)
+            font=(FONT, 10), fg="#CCFBF1", bg=C_HEADER)
         self.clock_label.pack(side="left", padx=(0, 8))
         self._tick_clock()
 
@@ -87,20 +88,7 @@ class ShiGuangApp:
 
     # ── 工具栏 ──
     def _build_toolbar(self):
-        bar = tk.Frame(self.root, bg=C_TOOLBAR, height=30)
-        bar.pack(fill="x")
-        bar.pack_propagate(False)
-
-        tools = [
-            ("🎯 目标拆解", self._open_goal_wizard),
-            ("🔍 文字识别", self._open_ocr),
-        ]
-        for text, cmd in tools:
-            btn = tk.Button(bar, text=text, font=(FONT, 9),
-                           bg=C_TOOLBAR, fg=C_TEXT, bd=0,
-                           activebackground=C_PAGE, activeforeground=C_ACCENT,
-                           padx=12, pady=1, cursor="hand2", command=cmd)
-            btn.pack(side="left", padx=(8, 0))
+        pass  # 工具栏已整合到标签页
 
     # ── 主体：上下分区 ──
     def _build_main_layout(self):
@@ -110,7 +98,7 @@ class ShiGuangApp:
 
         # ═══ 上区：今日任务（全宽）═══
         top = tk.Frame(pw, bg=C_TASK_BG)
-        pw.add(top, minsize=180, stretch="always")
+        pw.add(top, minsize=240, stretch="always")
 
         # 区域标题 + 左侧色条
         hdr = tk.Frame(top, bg=C_TASK_BG)
@@ -143,7 +131,14 @@ class ShiGuangApp:
         nb_learn.add(self.week_tab, text="  📅 周计划表  ")
         self.timer_stats_tab = TimerStatsTab(nb_learn, self)
         nb_learn.add(self.timer_stats_tab, text="  ⏱ 专注统计  ")
+        self.ocr_tab = OcrTab(nb_learn, self)
+        nb_learn.add(self.ocr_tab, text="  🔍 文字识别  ")
+        self.hot_tab = HotTab(nb_learn, self)
+        nb_learn.add(self.hot_tab, text="  📰 每日热点  ")
+        self.goal_wizard = SmartGoalWizard(nb_learn, self._on_goals_generated)
+        nb_learn.add(self.goal_wizard, text="  🎯 目标拆解  ")
         nb_learn.bind("<<NotebookTabChanged>>", self._on_learn_tab_changed)
+        self.nb_learn = nb_learn
 
         # 右侧 Notebook：健康数据
         health_frame = tk.Frame(bottom, bg=C_HEALTH_BG)
@@ -178,18 +173,11 @@ class ShiGuangApp:
         elif "训练" in cur:
             self.progress_tab.refresh_progress()
 
-    # ── 工具弹窗 ──
-    def _open_goal_wizard(self):
-        SmartGoalWizard(self.root, self)
-
-    def _open_ocr(self):
-        dlg = tk.Toplevel(self.root)
-        dlg.title("文字识别")
-        dlg.geometry("700x500")
-        dlg.transient(self.root)
-        dlg.configure(bg=C_PAGE)
-        otr = OcrTab(dlg, self)
-        otr.pack(fill="both", expand=True)
+    # ── 目标生成回调 ──
+    def _on_goals_generated(self, goals):
+        existing = DataManager.load(GOALS_FILE, default=[])
+        existing.extend(goals)
+        DataManager.save(GOALS_FILE, existing)
 
     # ── 全局样式 ──
     def _setup_style(self):
@@ -202,6 +190,9 @@ class ShiGuangApp:
         style.configure("TLabelframe.Label", font=(FONT, 10, "bold"),
                        background=C_PAGE, foreground=C_TEXT)
         style.configure("TButton", font=(FONT, 10), padding=(10, 5))
+        style.map("TButton",
+                  padding=[("pressed", (12, 7)), ("active", (10, 5))],
+                  relief=[("pressed", "raised"), ("!pressed", "raised")])
         style.configure("TRadiobutton", font=(FONT, 10), background=C_PAGE)
         style.configure("TEntry", font=(FONT, 10), fieldbackground=C_INPUT_BG,
                        borderwidth=1, relief="solid")
@@ -304,11 +295,47 @@ class ShiGuangApp:
                     elif days_left <= 100:
                         color = C_AMBER
                     else:
-                        color = C_ACCENT
+                        color = C_ACCENT_L
                 self.countdown_label.config(text=text, fg=color)
             except Exception:
                 pass
         self.root.after(600000, self._refresh_countdown)
+
+    def check_all_modules(self):
+        """每次完成任务后自检所有模块状态。返回问题列表，无问题返回空列表。"""
+        issues = []
+        tab_modules = {
+            "今日任务": "task_tab",
+            "周计划表": "week_tab",
+            "专注统计": "timer_stats_tab",
+            "训练进度": "progress_tab",
+            "时间追踪": "timetrack_tab",
+            "每日热点": "hot_tab",
+        }
+        for label, attr in tab_modules.items():
+            if not hasattr(self, attr) or getattr(self, attr, None) is None:
+                issues.append(f"❌ 缺失模块: {label} ({attr})")
+        data_files = {
+            "任务数据": (TASKS_FILE,),
+            "目标数据": (GOALS_FILE,),
+            "记录数据": (RECORDS_FILE,),
+            "专注记录": (FOCUS_FILE,),
+            "系统设置": (SETTINGS_FILE,),
+            "训练日志": (TRAINING_LOG_FILE,),
+            "空闲时间": (FREE_TIME_FILE,),
+        }
+        for label, (path,) in data_files.items():
+            try:
+                import os
+                if os.path.exists(path):
+                    DataManager.load(path)
+            except Exception as e:
+                issues.append(f"❌ 数据损坏: {label} — {e}")
+        if not hasattr(self, 'tracker') or self.tracker is None:
+            issues.append("❌ 时间追踪器未启动")
+        elif not self.tracker._running:
+            issues.append("⚠️ 时间追踪器已停止")
+        return issues
 
     def on_close(self):
         self.tracker.stop()
