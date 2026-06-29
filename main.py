@@ -80,10 +80,14 @@ class ShiGuangApp:
         self.clock_label.pack(side="left", padx=(0, 8))
         self._tick_clock()
 
-        tk.Button(right_area, text="考试日", font=(FONT, 8),
-                  bg="#0B7A70", fg="#CCFBF1", bd=0, padx=8, pady=1,
-                  activebackground="#0F9688", activeforeground="#FFFFFF",
-                  cursor="hand2", command=self._set_exam_date).pack(side="left")
+        # Canvas 圆角按钮替代 tk.Button
+        self.exam_btn = tk.Canvas(right_area, width=52, height=24,
+                                   bg=C_HEADER, highlightthickness=0, cursor="hand2")
+        self.exam_btn.pack(side="left")
+        self._draw_exam_btn()
+        self.exam_btn.bind("<Button-1>", lambda e: self._set_exam_date())
+        self.exam_btn.bind("<Enter>", lambda e: self._draw_exam_btn(hover=True))
+        self.exam_btn.bind("<Leave>", lambda e: self._draw_exam_btn(hover=False))
 
         # Canvas 装饰线（teal → mint 渐变暗示）
         accent_line = tk.Canvas(self.root, height=2, bg=C_PAGE, highlightthickness=0)
@@ -92,6 +96,21 @@ class ShiGuangApp:
     # ── 工具栏 ──
     def _build_toolbar(self):
         pass  # 工具栏已整合到标签页
+
+    def _draw_exam_btn(self, hover=False):
+        """绘制 Canvas 圆角按钮"""
+        c = self.exam_btn
+        c.delete("all")
+        w, h = 52, 24
+        r = 6
+        bg = "#0F9688" if hover else "#0B7A70"
+        fg = "#FFFFFF" if hover else "#CCFBF1"
+        # 圆角矩形
+        pts = [r,0, w-r,0, w-r,0, w,0, w,r, w,h-r, w,h, w-r,h,
+               r,h, 0,h, 0,h-r, 0,r, 0,0, r,0]
+        c.create_polygon(pts, fill=bg, outline="", smooth=True)
+        c.create_text(w//2, h//2, text="考试日", font=(FONT, 8),
+                      fill=fg, anchor="center")
 
     # ── 主体：左工右览 ──
     def _build_main_layout(self):
@@ -170,10 +189,18 @@ class ShiGuangApp:
         style.configure("TLabelframe", background=C_PAGE)
         style.configure("TLabelframe.Label", font=(FONT, 10, "bold"),
                        background=C_PAGE, foreground=C_TEXT)
-        style.configure("TButton", font=(FONT, 10), padding=(10, 5))
+        style.configure("TButton", font=(FONT, 10), padding=(12, 6))
         style.map("TButton",
-                  padding=[("pressed", (12, 7)), ("active", (10, 5))],
-                  relief=[("pressed", "raised"), ("!pressed", "raised")])
+                  background=[("active", C_ACCENT_L), ("pressed", C_ACCENT)],
+                  foreground=[("active", C_TEXT), ("pressed", "#FFFFFF")],
+                  padding=[("pressed", (14, 8)), ("active", (12, 6))],
+                  relief=[("pressed", "flat"), ("!pressed", "flat")])
+        # 主操作按钮（绿色强调）
+        style.configure("Primary.TButton", font=(FONT, 10, "bold"),
+                       padding=(16, 7))
+        style.map("Primary.TButton",
+                  background=[("active", "#0B7A70"), ("pressed", "#096A60")],
+                  foreground=[("active", "#FFFFFF"), ("pressed", "#FFFFFF")])
         style.configure("TRadiobutton", font=(FONT, 10), background=C_PAGE)
         style.configure("TEntry", font=(FONT, 10), fieldbackground=C_INPUT_BG,
                        borderwidth=1, relief="solid")
@@ -184,10 +211,12 @@ class ShiGuangApp:
         style.configure("Treeview", font=(FONT, 10), rowheight=28)
         style.configure("Treeview.Heading", font=(FONT, 10, "bold"))
         style.configure("TNotebook", background=C_PAGE, borderwidth=0)
-        style.configure("TNotebook.Tab", font=(FONT, 10), padding=(14, 5))
+        style.configure("TNotebook.Tab", font=(FONT, 10), padding=(16, 7))
         style.map("TNotebook.Tab",
-                  background=[("selected", C_ACCENT), ("!selected", C_SIDEBAR)],
-                  foreground=[("selected", "#FFFFFF"), ("!selected", C_TEXT)])
+                  background=[("selected", C_ACCENT), ("active", C_ACCENT_L),
+                             ("!selected", C_SIDEBAR)],
+                  foreground=[("selected", "#FFFFFF"), ("active", C_TEXT),
+                             ("!selected", C_TEXT)])
 
     # ── 设置 ──
     def _load_settings(self):
