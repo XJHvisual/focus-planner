@@ -26,12 +26,9 @@ class TaskTab(ttk.Frame):
         ttk.Button(row1, text="⏰ 空闲", command=self.set_free_time).pack(side="left")
         ttk.Button(row1, text="📅 排程", command=self.auto_schedule).pack(side="left", padx=(2, 0))
 
-        # 第二行：进度 + 视图切换
+        # 第二行：视图切换
         row2 = ttk.Frame(toolbar)
         row2.pack(fill="x")
-        self.progress_var = tk.StringVar(value="0/0")
-        ttk.Label(row2, textvariable=self.progress_var, font=("", 10)).pack(side="left")
-        ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=5)
         ttk.Button(row2, text="📋 列表/日程/周表", command=self.toggle_view).pack(side="left")
 
         # 第三行：状态信息
@@ -92,9 +89,6 @@ class TaskTab(ttk.Frame):
 
         # 只显示今天的任务
         today_tasks = [t for t in tasks if t.get("date", today) == today]
-        done = sum(1 for t in today_tasks if t["done"])
-        total = len(today_tasks)
-        self.progress_var.set(f"{done}/{total}")
 
         # 显示空闲时间信息
         ft = self._load_free_time()
@@ -289,9 +283,6 @@ class TaskTab(ttk.Frame):
             DataManager.save(TASKS_FILE, tasks)
             self.draw_schedule()
             today_tasks = [t for t in tasks if t.get('date', date.today().isoformat()) == date.today().isoformat()]
-            self.progress_var.set(
-                f"{sum(1 for t in today_tasks if t['done'])}/{len(today_tasks)}"
-            )
             break
 
     # ── 周视图绘制（课程表） ───────────────────────────────
