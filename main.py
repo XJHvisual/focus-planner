@@ -121,7 +121,7 @@ class ShiGuangApp:
         # ═══ 左栏 38%：任务 + 专注·热点 ═══
         left = tk.Frame(pw, bg=C_TASK_BG,
                        highlightthickness=1, highlightbackground=C_LINE)
-        pw.add(left, minsize=520, stretch="always", width=640)
+        pw.add(left, minsize=520, stretch="always", width=680)
 
         # 左上：今日任务
         task_hdr = tk.Frame(left, bg=C_TASK_BG)
