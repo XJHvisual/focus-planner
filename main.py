@@ -41,7 +41,7 @@ class ShiGuangApp:
         self.root = tk.Tk()
         self.root.title("拾光 v3.3")
         self.root.geometry("1440x900")
-        self.root.minsize(1100, 750)
+        self.root.minsize(1200, 750)
         self.root.configure(background=C_PAGE)
         self._setup_style()
 
@@ -93,91 +93,60 @@ class ShiGuangApp:
     def _build_toolbar(self):
         pass  # 工具栏已整合到标签页
 
-    # ── 主体：上下分区 ──
+    # ── 主体：左工右览 ──
     def _build_main_layout(self):
-        pw = tk.PanedWindow(self.root, orient="vertical",
+        pw = tk.PanedWindow(self.root, orient="horizontal",
                            bg=C_PAGE, sashwidth=3, sashrelief="flat")
-        pw.pack(fill="both", expand=True)
+        pw.pack(fill="both", expand=True, padx=8, pady=6)
 
-        # ═══ 上区：今日任务（全宽）═══
-        top = tk.Frame(pw, bg=C_TASK_BG,
-                      highlightthickness=1, highlightbackground=C_LINE)
-        pw.add(top, minsize=240, stretch="always")
+        # ═══ 左栏 38%：任务 + 专注·热点 ═══
+        left = tk.Frame(pw, bg=C_TASK_BG,
+                       highlightthickness=1, highlightbackground=C_LINE)
+        pw.add(left, minsize=400, stretch="always", width=540)
 
-        # 区域标题（Canvas 圆点替代侧边条）
-        hdr = tk.Frame(top, bg=C_TASK_BG)
-        hdr.pack(fill="x", padx=10, pady=(6, 0))
-        dot = tk.Canvas(hdr, width=10, height=10, bg=C_TASK_BG, highlightthickness=0)
-        dot.create_oval(2, 2, 8, 8, fill=C_AMBER, outline="")
-        dot.pack(side="left", padx=(0, 6))
-        tk.Label(hdr, text="今日任务", font=(FONT, 11, "bold"),
+        # 左上：今日任务
+        task_hdr = tk.Frame(left, bg=C_TASK_BG)
+        task_hdr.pack(fill="x", padx=10, pady=(8, 0))
+        dot1 = tk.Canvas(task_hdr, width=10, height=10, bg=C_TASK_BG, highlightthickness=0)
+        dot1.create_oval(2, 2, 8, 8, fill=C_AMBER, outline="")
+        dot1.pack(side="left", padx=(0, 6))
+        tk.Label(task_hdr, text="今日任务", font=(FONT, 11, "bold"),
                  fg=C_TEXT, bg=C_TASK_BG).pack(side="left")
 
-        self.task_tab = TaskTab(top, self)
-        self.task_tab.pack(fill="both", expand=True, padx=8, pady=4)
+        self.task_tab = TaskTab(left, self)
+        self.task_tab.pack(fill="both", expand=True, padx=6, pady=(2, 6))
 
-        # ═══ 下区：学习 | 健康（左右 Notebook）═══
-        bottom = tk.Frame(pw, bg=C_PAGE)
-        pw.add(bottom, minsize=300, stretch="always")
+        # 左下：专注 + 热点（Notebook）
+        nb_left = ttk.Notebook(left)
+        nb_left.pack(fill="both", expand=True, padx=4, pady=(0, 4))
 
-        # 左侧 Notebook：学习看板
-        study_frame = tk.Frame(bottom, bg=C_STUDY_BG,
-                              highlightthickness=1, highlightbackground=C_LINE)
-        study_frame.pack(side="left", fill="both", expand=True, padx=(4, 2), pady=4)
+        self.timer_stats_tab = TimerStatsTab(nb_left, self)
+        nb_left.add(self.timer_stats_tab, text="  ⏱ 专注统计  ")
+        self.hot_tab = HotTab(nb_left, self)
+        nb_left.add(self.hot_tab, text="  📰 每日热点  ")
 
-        shdr = tk.Frame(study_frame, bg=C_STUDY_BG)
-        shdr.pack(fill="x", padx=8, pady=(4, 0))
-        dot2 = tk.Canvas(shdr, width=10, height=10, bg=C_STUDY_BG, highlightthickness=0)
-        dot2.create_oval(2, 2, 8, 8, fill=C_ACCENT, outline="")
-        dot2.pack(side="left", padx=(0, 6))
-        tk.Label(shdr, text="学习看板", font=(FONT, 10, "bold"),
-                 fg=C_TEXT, bg=C_STUDY_BG).pack(side="left")
+        # ═══ 右栏 62%：学习 + 健康（Notebook）═══
+        right = tk.Frame(pw, bg=C_STUDY_BG,
+                        highlightthickness=1, highlightbackground=C_LINE)
+        pw.add(right, minsize=600, stretch="always")
 
-        nb_learn = ttk.Notebook(study_frame)
-        nb_learn.pack(fill="both", expand=True, padx=4, pady=(2, 4))
+        nb_right = ttk.Notebook(right)
+        nb_right.pack(fill="both", expand=True, padx=4, pady=4)
 
-        self.week_tab = WeekTab(nb_learn, self)
-        nb_learn.add(self.week_tab, text="  📅 周计划表  ")
-        self.timer_stats_tab = TimerStatsTab(nb_learn, self)
-        nb_learn.add(self.timer_stats_tab, text="  ⏱ 专注统计  ")
-        self.ocr_tab = OcrTab(nb_learn, self)
-        nb_learn.add(self.ocr_tab, text="  🔍 文字识别  ")
-        self.hot_tab = HotTab(nb_learn, self)
-        nb_learn.add(self.hot_tab, text="  📰 每日热点  ")
-        self.goal_wizard = SmartGoalWizard(nb_learn, self._on_goals_generated)
-        nb_learn.add(self.goal_wizard, text="  🎯 目标拆解  ")
-        nb_learn.bind("<<NotebookTabChanged>>", self._on_learn_tab_changed)
-        self.nb_learn = nb_learn
+        self.week_tab = WeekTab(nb_right, self)
+        nb_right.add(self.week_tab, text="  📅 周计划表  ")
+        self.progress_tab = ProgressTab(nb_right, self)
+        nb_right.add(self.progress_tab, text="  📈 训练进度  ")
+        self.timetrack_tab = TimeTrackTab(nb_right, self)
+        nb_right.add(self.timetrack_tab, text="  📊 时间追踪  ")
+        self.ocr_tab = OcrTab(nb_right, self)
+        nb_right.add(self.ocr_tab, text="  🔍 文字识别  ")
+        self.goal_wizard = SmartGoalWizard(nb_right, self._on_goals_generated)
+        nb_right.add(self.goal_wizard, text="  🎯 目标拆解  ")
+        nb_right.bind("<<NotebookTabChanged>>", self._on_right_tab_changed)
+        self.nb_right = nb_right
 
-        # 右侧 Notebook：健康数据
-        health_frame = tk.Frame(bottom, bg=C_HEALTH_BG,
-                               highlightthickness=1, highlightbackground=C_LINE)
-        health_frame.pack(side="right", fill="both", expand=True, padx=(2, 4), pady=4)
-
-        hhdr = tk.Frame(health_frame, bg=C_HEALTH_BG)
-        hhdr.pack(fill="x", padx=8, pady=(4, 0))
-        dot3 = tk.Canvas(hhdr, width=10, height=10, bg=C_HEALTH_BG, highlightthickness=0)
-        dot3.create_oval(2, 2, 8, 8, fill=C_RED, outline="")
-        dot3.pack(side="left", padx=(0, 6))
-        tk.Label(hhdr, text="健康数据", font=(FONT, 10, "bold"),
-                 fg=C_TEXT, bg=C_HEALTH_BG).pack(side="left")
-
-        nb_health = ttk.Notebook(health_frame)
-        nb_health.pack(fill="both", expand=True, padx=4, pady=(2, 4))
-
-        self.progress_tab = ProgressTab(nb_health, self)
-        nb_health.add(self.progress_tab, text="  📈 训练进度  ")
-        self.timetrack_tab = TimeTrackTab(nb_health, self)
-        nb_health.add(self.timetrack_tab, text="  📊 时间追踪  ")
-        nb_health.bind("<<NotebookTabChanged>>", self._on_health_tab_changed)
-
-    def _on_learn_tab_changed(self, ev):
-        nb = ev.widget
-        cur = nb.tab(nb.select(), "text").strip()
-        if "专注" in cur:
-            self.timer_stats_tab.refresh_stats()
-
-    def _on_health_tab_changed(self, ev):
+    def _on_right_tab_changed(self, ev):
         nb = ev.widget
         cur = nb.tab(nb.select(), "text").strip()
         if "追踪" in cur:
