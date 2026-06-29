@@ -16,7 +16,7 @@ class TaskTab(ttk.Frame):
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", pady=(0, 5))
 
-        # 第一行：核心操作 + 进度
+        # 第一行：操作按钮
         row1 = ttk.Frame(toolbar)
         row1.pack(fill="x")
         ttk.Button(row1, text="➕ 添加", command=self.add_task, style="Primary.TButton").pack(side="left")
@@ -25,13 +25,16 @@ class TaskTab(ttk.Frame):
         ttk.Separator(row1, orient="vertical").pack(side="left", fill="y", padx=5)
         ttk.Button(row1, text="⏰ 空闲", command=self.set_free_time).pack(side="left")
         ttk.Button(row1, text="📅 排程", command=self.auto_schedule).pack(side="left", padx=(2, 0))
-        # 右侧：进度 + 视图切换
-        self.progress_var = tk.StringVar(value="0/0")
-        ttk.Label(row1, textvariable=self.progress_var, font=("", 10)).pack(side="right", padx=(0, 4))
-        ttk.Separator(row1, orient="vertical").pack(side="right", fill="y", padx=4)
-        ttk.Button(row1, text="📋 列表/日程/周表", command=self.toggle_view).pack(side="right")
 
-        # 第二行：状态信息
+        # 第二行：进度 + 视图切换
+        row2 = ttk.Frame(toolbar)
+        row2.pack(fill="x")
+        self.progress_var = tk.StringVar(value="0/0")
+        ttk.Label(row2, textvariable=self.progress_var, font=("", 10)).pack(side="left")
+        ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=5)
+        ttk.Button(row2, text="📋 列表/日程/周表", command=self.toggle_view).pack(side="left")
+
+        # 第三行：状态信息
         self.schedule_info = ttk.Label(toolbar, text="", foreground="gray", font=("", 9))
         self.schedule_info.pack(anchor="w")
 
