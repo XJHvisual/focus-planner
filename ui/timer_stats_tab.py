@@ -56,7 +56,7 @@ class TimerStatsTab(ttk.Frame):
 
         btn_frame = ttk.Frame(timer_section)
         btn_frame.pack(pady=10)
-        self.btn_start = ttk.Button(btn_frame, text="▶ 开始专注", command=self.start_timer, width=14)
+        self.btn_start = ttk.Button(btn_frame, text="▶ 开始专注", command=self.start_timer, width=14, style="Primary.TButton")
         self.btn_start.pack(side="left", padx=5)
         self.btn_pause = ttk.Button(btn_frame, text="⏸ 暂停", command=self.pause_timer, state="disabled", width=14)
         self.btn_pause.pack(side="left", padx=5)

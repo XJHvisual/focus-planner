@@ -44,7 +44,7 @@ class HotTab(ttk.Frame):
 
         # 刷新按钮
         self.refresh_btn = ttk.Button(toolbar, text="🔄 刷新",
-                                       command=self._async_refresh)
+                                       command=self._async_refresh, style="Primary.TButton")
         self.refresh_btn.pack(side="right")
 
         # 更新时间

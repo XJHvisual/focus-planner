@@ -36,7 +36,7 @@ class ProgressTab(ttk.Frame):
         # 实时BMI预览
         self.bmi_label = ttk.Label(row1, text="BMI: —", foreground="#666", font=("", 9))
         self.bmi_label.pack(side="left", padx=(0, 15))
-        ttk.Button(row1, text="💾 保存记录", command=self.save_record).pack(side="left")
+        ttk.Button(row1, text="💾 保存记录", command=self.save_record, style="Primary.TButton").pack(side="left")
 
         # 中部：体重曲线 + 完成率（无框，用标题+色块区分）
         mid = ttk.Frame(self)

@@ -73,7 +73,7 @@ class OcrTab(ttk.Frame):
         self.paste_btn = ttk.Button(btn_bar, text="📋 粘贴", command=self.paste_image)
         self.paste_btn.pack(side="left", padx=(0, 8))
         self.ocr_btn = ttk.Button(btn_bar, text="🔍 开始识别", command=self.start_ocr,
-                                   state="disabled")
+                                   state="disabled", style="Primary.TButton")
         self.ocr_btn.pack(side="left", padx=(0, 8))
         self.progress = ttk.Progressbar(btn_bar, mode="indeterminate", length=80)
         self.status_label = ttk.Label(btn_bar, text="", foreground="#666")

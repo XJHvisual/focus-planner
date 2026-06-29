@@ -19,7 +19,7 @@ class TaskTab(ttk.Frame):
         # 第一行：操作按钮
         row1 = ttk.Frame(toolbar)
         row1.pack(fill="x")
-        ttk.Button(row1, text="➕ 添加", command=self.add_task).pack(side="left")
+        ttk.Button(row1, text="➕ 添加", command=self.add_task, style="Primary.TButton").pack(side="left")
         ttk.Button(row1, text="🗑 删除", command=self.delete_task).pack(side="left", padx=(2, 0))
         ttk.Button(row1, text="🔄 清除", command=self.clear_done).pack(side="left", padx=(2, 0))
         ttk.Separator(row1, orient="vertical").pack(side="left", fill="y", padx=6)
