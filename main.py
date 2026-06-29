@@ -41,7 +41,7 @@ class ShiGuangApp:
         self.root = tk.Tk()
         self.root.title("拾光 v3.3")
         self.root.geometry("1440x900")
-        self.root.minsize(1300, 750)
+        self.root.minsize(1200, 750)
         self.root.configure(background=C_PAGE)
         self._setup_style()
 
@@ -121,7 +121,7 @@ class ShiGuangApp:
         # ═══ 左栏 38%：任务 + 专注·热点 ═══
         left = tk.Frame(pw, bg=C_TASK_BG,
                        highlightthickness=1, highlightbackground=C_LINE)
-        pw.add(left, minsize=550, stretch="always", width=640)
+        pw.add(left, minsize=520, stretch="always", width=640)
 
         # 左上：今日任务
         task_hdr = tk.Frame(left, bg=C_TASK_BG)
